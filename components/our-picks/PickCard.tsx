@@ -4,7 +4,10 @@ import { MapPin } from 'lucide-react';
 
 export type PickCardProps = {
   name: string;
-  location: string;
+  /** Shown with map pin when no swatches and no `description`. */
+  location?: string;
+  /** When set, shown below the name instead of the location row (no pin). */
+  description?: string;
   badge: 'our-pick' | 'bride' | 'groom';
   imageUrl: string;
   swatchColors?: string[];
@@ -33,7 +36,8 @@ const dmSansFont = { fontFamily: 'var(--font-dm-sans)' } as const;
 
 export function PickCard({
   name,
-  location,
+  location = '',
+  description,
   badge,
   imageUrl,
   swatchColors,
@@ -70,6 +74,13 @@ export function PickCard({
               />
             ))}
           </div>
+        ) : description ? (
+          <p
+            className="text-[#6B5F58]"
+            style={{ ...dmSansFont, fontSize: '14px', lineHeight: '20px' }}
+          >
+            {description}
+          </p>
         ) : (
           <div
             className="flex flex-row items-center gap-1 whitespace-nowrap text-sm text-[#6B5F58]"

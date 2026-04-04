@@ -1,6 +1,6 @@
 import { PickCard } from '@/components/our-picks/PickCard';
 
-/** Hardcoded VENUE + COLOR THEME lists — no data fetch. */
+/** Hardcoded Our Picks sections — no data fetch. */
 export function OurPicksSections() {
   return (
     <div className="flex w-full flex-col items-start">
@@ -31,7 +31,7 @@ export function OurPicksSections() {
         </div>
       </section>
 
-      <section className="w-full">
+      <section className="mb-[24px] w-full">
         <h2 className="mb-4 text-xs font-semibold tracking-widest text-[#C4A96B]">COLOR THEME</h2>
         <div className="flex flex-col gap-3">
           <PickCard
@@ -48,6 +48,34 @@ export function OurPicksSections() {
             badge="bride"
             imageUrl="https://images.unsplash.com/photo-1766043373136-f2566b286edc?w=800&q=80"
             swatchColors={['#6B8F71', '#C5C97A', '#6B7B5A']}
+            bgColor="white"
+          />
+        </div>
+      </section>
+
+      <section className="mb-[24px] w-full">
+        <h2 className="mb-4 text-xs font-semibold tracking-widest text-[#C4A96B]">
+          FLORALS & DECOR
+        </h2>
+        <div className="flex flex-col gap-3">
+          <PickCard
+            name="Garden Roses & Peonies"
+            description="Lush, romantic blooms"
+            badge="our-pick"
+            imageUrl="https://images.unsplash.com/photo-1749964705495-2099c9c09b9f?w=800&q=80"
+            bgColor="warm"
+          />
+        </div>
+      </section>
+
+      <section className="w-full">
+        <h2 className="mb-4 text-xs font-semibold tracking-widest text-[#C4A96B]">ENTERTAINMENT</h2>
+        <div className="flex flex-col gap-3">
+          <PickCard
+            name="Live Jazz Band"
+            description="Sophisticated swing music"
+            badge="groom"
+            imageUrl="https://images.unsplash.com/photo-1677845100757-f4ff89b22df9?w=800&q=80"
             bgColor="white"
           />
         </div>
