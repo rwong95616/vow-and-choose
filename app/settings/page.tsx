@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ChevronRight, Copy } from 'lucide-react';
+import { ChevronDown, ChevronRight, ChevronUp, Copy } from 'lucide-react';
 import { AppShell } from '@/components/AppShell';
 import { OnboardingFlow } from '@/components/onboarding/OnboardingFlow';
 import { useCouple } from '@/lib/hooks/useCouple';
@@ -10,24 +10,58 @@ import { isOnboardingComplete } from '@/lib/storage';
 
 const COUPLE_CODE = 'ROSE42';
 
-/** Chevron-down for custom-styled `<select>` (native UI hidden via appearance-none). */
-const SELECT_DROPDOWN_ARROW =
-  'url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2720%27 height=%2720%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%236B5F58%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3E%3Cpath d=%27m6 9 6 6 6-6%27/%3E%3C/svg%3E")';
-
-const US_STATE_OPTIONS = [
-  'California',
-  'New York',
-  'Texas',
-  'Florida',
-  'Illinois',
+const ALL_STATES = [
+  'Alabama',
+  'Alaska',
   'Arizona',
-  'Washington',
+  'Arkansas',
+  'California',
   'Colorado',
-  'Pennsylvania',
-  'Ohio',
+  'Connecticut',
+  'Delaware',
+  'Florida',
   'Georgia',
+  'Hawaii',
+  'Idaho',
+  'Illinois',
+  'Indiana',
+  'Iowa',
+  'Kansas',
+  'Kentucky',
+  'Louisiana',
+  'Maine',
+  'Maryland',
+  'Massachusetts',
+  'Michigan',
+  'Minnesota',
+  'Mississippi',
+  'Missouri',
+  'Montana',
+  'Nebraska',
+  'Nevada',
+  'New Hampshire',
+  'New Jersey',
+  'New Mexico',
+  'New York',
   'North Carolina',
-] as const;
+  'North Dakota',
+  'Ohio',
+  'Oklahoma',
+  'Oregon',
+  'Pennsylvania',
+  'Rhode Island',
+  'South Carolina',
+  'South Dakota',
+  'Tennessee',
+  'Texas',
+  'Utah',
+  'Vermont',
+  'Virginia',
+  'Washington',
+  'West Virginia',
+  'Wisconsin',
+  'Wyoming',
+];
 
 const SETTINGS_CARD_CLASS =
   'box-border flex w-full flex-col gap-3 rounded-[20px] border-0 bg-white p-[20px] shadow-[0_2px_8px_0_rgba(44,36,32,0.08)]';
@@ -37,6 +71,7 @@ function SettingsContent() {
   const [editingLocation, setEditingLocation] = useState(false);
   const [state, setState] = useState('California');
   const [city, setCity] = useState('San Francisco');
+  const [stateDropdownOpen, setStateDropdownOpen] = useState(false);
 
   const locationFieldClass =
     'w-full rounded-[12px] border border-[#D3D1C7] py-[14px] px-[16px] text-[#2C2420] outline-none';
@@ -105,25 +140,49 @@ function SettingsContent() {
           ) : (
             <>
               <p className="text-xs font-semibold tracking-widest text-[#C4A96B]">WEDDING LOCATION</p>
-              <select
-                value={state}
-                onChange={(e) => setState(e.target.value)}
-                aria-label="State"
-                className={`${locationFieldClass} appearance-none bg-white pr-[44px]`}
-                style={{
-                  fontFamily: 'var(--font-dm-sans)',
-                  backgroundImage: SELECT_DROPDOWN_ARROW,
-                  backgroundRepeat: 'no-repeat',
-                  backgroundPosition: 'right 16px center',
-                  backgroundSize: '20px 20px',
-                }}
-              >
-                {US_STATE_OPTIONS.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </select>
+              <div className="w-full">
+                <button
+                  type="button"
+                  aria-expanded={stateDropdownOpen}
+                  aria-haspopup="listbox"
+                  className={`flex w-full items-center justify-between rounded-[12px] border py-[14px] pl-4 pr-4 text-base text-[#2C2420] ${
+                    stateDropdownOpen ? 'border-[#C4A96B]' : 'border-[#D3D1C7]'
+                  }`}
+                  style={{ fontFamily: 'var(--font-dm-sans)' }}
+                  onClick={() => setStateDropdownOpen((open) => !open)}
+                >
+                  <span>{state}</span>
+                  {stateDropdownOpen ? (
+                    <ChevronUp size={20} className="shrink-0 text-[#6B5F58]" aria-hidden />
+                  ) : (
+                    <ChevronDown size={20} className="shrink-0 text-[#6B5F58]" aria-hidden />
+                  )}
+                </button>
+                {stateDropdownOpen ? (
+                  <div
+                    className="mt-1 max-h-[240px] overflow-y-auto rounded-[14px] border-[0.5px] border-solid border-[#D4CEC8] bg-white shadow-[0_8px_24px_0_rgba(44,36,32,0.12)]"
+                    role="listbox"
+                  >
+                    {ALL_STATES.map((s) => (
+                      <div
+                        key={s}
+                        role="option"
+                        aria-selected={state === s}
+                        onClick={() => {
+                          setState(s);
+                          setStateDropdownOpen(false);
+                        }}
+                        className={`w-full cursor-pointer px-4 py-[14px] text-left text-base text-[#2C2420] ${
+                          s === state ? 'bg-[#FAF7F2]' : 'bg-white hover:bg-[#FAF7F2]'
+                        }`}
+                        style={{ fontFamily: 'var(--font-dm-sans)' }}
+                      >
+                        {s}
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
               <input
                 type="text"
                 value={city}
@@ -136,7 +195,10 @@ function SettingsContent() {
                 type="button"
                 className="w-full rounded-full bg-[#884E50] py-4 font-medium text-white"
                 style={{ fontFamily: 'var(--font-dm-sans)' }}
-                onClick={() => setEditingLocation(false)}
+                onClick={() => {
+                  setEditingLocation(false);
+                  setStateDropdownOpen(false);
+                }}
               >
                 Save location
               </button>
