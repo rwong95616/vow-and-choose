@@ -8,7 +8,7 @@
 }
 
 body {
-  @apply bg-page text-ink antialiased;
+  @apply bg-[#FAF7F2] text-ink antialiased;
 }
 
 .no-scrollbar::-webkit-scrollbar {

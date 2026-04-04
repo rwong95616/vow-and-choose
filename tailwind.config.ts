@@ -10,8 +10,8 @@ const config: Config = {
     extend: {
       colors: {
         /** Design system — core */
-        /** Cream canvas — matches couple-code / onboarding ref */
-        page: '#F9F7F2',
+        /** Cream canvas — matches Settings / Our Picks (#FAF7F2) */
+        page: '#FAF7F2',
         /** Swipe deck screen background (warm cream — Figma) */
         'swipe-canvas': '#FAF7F2',
         /** Role picker screen (Who's swiping?) */

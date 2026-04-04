@@ -26,7 +26,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${dmSans.variable} ${playfairDisplay.variable}`}>
-      <body className="font-sans min-h-screen">{children}</body>
+      <body className="font-sans min-h-screen bg-[#FAF7F2]">{children}</body>
     </html>
   );
 }

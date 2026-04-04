@@ -82,7 +82,6 @@ export function AppShell({ children, variant = 'default' }: Props) {
   const settingsOn = pathname === '/settings';
 
   const isSwipe = variant === 'swipe';
-  const shellBg = isSwipe ? 'bg-swipe-canvas' : 'bg-page';
 
   /** Picks pages set their own top spacing (e.g. pt-[60px]); avoid stacking the default 0.75rem main padding. */
   const mainPaddingTop = isSwipe
@@ -110,7 +109,7 @@ export function AppShell({ children, variant = 'default' }: Props) {
 
   return (
     <div
-      className={`mx-auto flex max-w-[480px] min-h-0 flex-col overflow-hidden ${shellBg} ${
+      className={`mx-auto flex max-w-[480px] min-h-0 flex-col overflow-hidden ${
         isSwipe ? 'h-screen max-h-[100dvh] min-h-0' : 'min-h-[100dvh]'
       }`}
     >

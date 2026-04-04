@@ -67,7 +67,7 @@ function PicksPageInner() {
 
   return (
     <AppShell>
-      <div className="-mx-4 min-h-[100dvh] bg-[#F0EDE4] px-6 pb-32 pt-14">
+      <div className="-mx-4 min-h-[100dvh] px-6 pb-32 pt-14">
         <h1
           className="mb-8 font-[family-name:var(--font-playfair)]"
           style={{
