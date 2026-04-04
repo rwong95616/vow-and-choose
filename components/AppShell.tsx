@@ -78,11 +78,18 @@ function IconCogNav() {
 export function AppShell({ children, variant = 'default' }: Props) {
   const pathname = usePathname();
   const swipeOn = pathname === '/' || pathname === '';
-  const picksOn = pathname === '/picks';
+  const picksOn = pathname === '/picks' || pathname === '/our-picks';
   const settingsOn = pathname === '/settings';
 
   const isSwipe = variant === 'swipe';
   const shellBg = isSwipe ? 'bg-swipe-canvas' : 'bg-page';
+
+  /** Picks pages set their own top spacing (e.g. pt-[60px]); avoid stacking the default 0.75rem main padding. */
+  const mainPaddingTop = isSwipe
+    ? `pt-[env(safe-area-inset-top,0px)]`
+    : picksOn
+      ? 'pt-[env(safe-area-inset-top,0px)]'
+      : 'pt-[max(0.75rem,env(safe-area-inset-top,0px))]';
 
   const rose = 'text-[#7D3535]';
   const grey = 'text-[#6B5F58]';
@@ -101,8 +108,8 @@ export function AppShell({ children, variant = 'default' }: Props) {
       <main
         className={
           isSwipe
-            ? `flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden px-4 pt-[env(safe-area-inset-top,0px)] ${SWIPE_MAIN_BOTTOM_PAD}`
-            : 'flex-1 px-4 pb-[calc(5rem+env(safe-area-inset-bottom,0px))] pt-[max(0.75rem,env(safe-area-inset-top,0px))]'
+            ? `flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden px-4 ${mainPaddingTop} ${SWIPE_MAIN_BOTTOM_PAD}`
+            : `flex-1 px-4 pb-[calc(5rem+env(safe-area-inset-bottom,0px))] ${mainPaddingTop}`
         }
       >
         {children}

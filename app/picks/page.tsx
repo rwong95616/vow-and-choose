@@ -1,13 +1,11 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useEffect, useMemo, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { AppShell } from '@/components/AppShell';
-import { MatchesList } from '@/components/MatchesList';
+import { OurPicksSections } from '@/components/our-picks/OurPicksSections';
 import { OnboardingFlow } from '@/components/onboarding/OnboardingFlow';
 import { useCouple } from '@/lib/hooks/useCouple';
-import { usePicks } from '@/lib/hooks/usePicks';
-import { useVenues } from '@/lib/hooks/useVenues';
 import { isOnboardingComplete } from '@/lib/storage';
 import { saveCouplePartial } from '@/lib/storage';
 import { createBrowserClient } from '@/lib/supabase';
@@ -43,11 +41,6 @@ function PicksPageInner() {
       });
   }, [couple, refresh]);
 
-  const { swipes, loading } = usePicks(couple?.coupleId);
-  const { venues } = useVenues(couple?.locationState, couple?.locationCity);
-
-  const venueOptions = useMemo(() => venues, [venues]);
-
   if (!ready) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-page text-muted">
@@ -74,13 +67,20 @@ function PicksPageInner() {
 
   return (
     <AppShell>
-      <h1 className="mb-2 font-display text-2xl text-ink">Our Picks</h1>
-      <p className="mb-6 text-sm text-muted">Everything you both said yes to — updated live.</p>
-      {loading ? (
-        <p className="py-12 text-center text-muted">Loading picks…</p>
-      ) : (
-        <MatchesList swipes={swipes} venueOptions={venueOptions} />
-      )}
+      <div className="-mx-4 min-h-[100dvh] bg-[#F0EDE4] px-6 pb-32 pt-14">
+        <h1
+          className="mb-8 font-[family-name:var(--font-playfair)]"
+          style={{
+            fontSize: '32px',
+            fontWeight: 600,
+            lineHeight: '48px',
+            color: '#2C2420',
+          }}
+        >
+          Our Picks
+        </h1>
+        <OurPicksSections />
+      </div>
     </AppShell>
   );
 }

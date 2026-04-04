@@ -8,6 +8,8 @@ export type PickCardProps = {
   badge: 'our-pick' | 'bride' | 'groom';
   imageUrl: string;
   swatchColors?: string[];
+  /** Card surface: warm off-white for “our pick” rows, white for bride/groom. */
+  bgColor?: 'warm' | 'white';
 };
 
 const BADGE_LABEL: Record<PickCardProps['badge'], string> = {
@@ -22,34 +24,66 @@ const BADGE_CLASS: Record<PickCardProps['badge'], string> = {
   groom: 'bg-[#6B8F71] text-white text-sm px-4 py-1.5 rounded-full',
 };
 
-export function PickCard({ name, location, badge, imageUrl, swatchColors }: PickCardProps) {
+const CARD_BG: Record<NonNullable<PickCardProps['bgColor']>, string> = {
+  warm: 'bg-[#FAFAF5]',
+  white: 'bg-white',
+};
+
+const dmSansFont = { fontFamily: 'var(--font-dm-sans)' } as const;
+
+export function PickCard({
+  name,
+  location,
+  badge,
+  imageUrl,
+  swatchColors,
+  bgColor = 'warm',
+}: PickCardProps) {
   return (
-    <div className="flex flex-row items-center gap-4 bg-[#FAFAF5] p-4 rounded-2xl">
+    <div
+      className={`flex min-h-[100px] flex-row items-start gap-4 rounded-2xl p-4 ${CARD_BG[bgColor]}`}
+    >
       <img
         src={imageUrl}
         alt={name}
-        className="h-20 w-20 flex-shrink-0 rounded-xl object-cover"
+        className="h-16 w-16 shrink-0 rounded-[14px] object-cover"
       />
       <div className="flex min-w-0 flex-1 flex-col gap-1">
-        <div className="text-xl font-semibold text-[#1a1a1a]">{name}</div>
+        <div
+          style={{
+            fontFamily: 'var(--font-dm-sans)',
+            fontSize: '16px',
+            fontWeight: 600,
+            lineHeight: '24px',
+            color: '#2C2420',
+          }}
+        >
+          {name}
+        </div>
         {swatchColors && swatchColors.length > 0 ? (
-          <div className="flex flex-row gap-2">
+          <div className="flex flex-row items-center gap-2">
             {swatchColors.map((color, i) => (
               <span
                 key={`${color}-${i}`}
-                className="h-6 w-6 rounded-full border border-black/5"
+                className="h-6 w-6 shrink-0 rounded-full border border-black/5"
                 style={{ backgroundColor: color }}
               />
             ))}
           </div>
         ) : (
-          <div className="flex items-center gap-1 text-sm text-[#888]">
-            <MapPin size={14} className="shrink-0 text-[#888]" aria-hidden />
+          <div
+            className="flex flex-row items-center gap-1 whitespace-nowrap text-sm text-[#6B5F58]"
+            style={dmSansFont}
+          >
+            <MapPin size={14} className="shrink-0 text-[#6B5F58]" aria-hidden />
             <span>{location}</span>
           </div>
         )}
       </div>
-      <span className={`ml-auto self-center flex-shrink-0 ${BADGE_CLASS[badge]}`}>
+      <span
+        className={`ml-auto mt-1 shrink-0 self-start whitespace-nowrap ${BADGE_CLASS[badge]}`}
+        style={dmSansFont}
+      >
         {BADGE_LABEL[badge]}
       </span>
     </div>

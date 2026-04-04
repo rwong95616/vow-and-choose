@@ -4,14 +4,14 @@ import './globals.css';
 
 const dmSans = DM_Sans({
   subsets: ['latin'],
+  weight: ['400', '600'],
   variable: '--font-dm-sans',
-  display: 'swap',
 });
 
-const playfair = Playfair_Display({
+const playfairDisplay = Playfair_Display({
   subsets: ['latin'],
+  weight: ['600'],
   variable: '--font-playfair',
-  display: 'swap',
 });
 
 export const metadata: Metadata = {
@@ -25,7 +25,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${dmSans.variable} ${playfair.variable}`}>
+    <html lang="en" className={`${dmSans.variable} ${playfairDisplay.variable}`}>
       <body className="font-sans min-h-screen">{children}</body>
     </html>
   );
