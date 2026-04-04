@@ -114,7 +114,7 @@ export function CardDeck({
   }
 
   return (
-    <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col gap-4 overflow-hidden">
+    <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col gap-4">
       <div className="relative mx-auto flex min-h-0 w-full max-w-[327px] flex-1 flex-col overflow-hidden">
         {next && (
           <div
@@ -144,7 +144,7 @@ export function CardDeck({
         </div>
       </div>
 
-      <div className="flex min-w-0 shrink-0 flex-col gap-2">
+      <div className="flex min-w-0 shrink-0 flex-col">
         <div className="flex h-16 shrink-0 items-center justify-center gap-6 px-2">
           <button
             type="button"
@@ -164,18 +164,30 @@ export function CardDeck({
           </button>
         </div>
 
-        <div className="flex shrink-0 justify-center px-2 pb-1">
-          <div className="flex flex-wrap items-start justify-center gap-1.5">
-            {cards.map((c, i) => (
-              <span
-                key={c.id}
-                className={`rounded-full transition-all duration-300 ${
-                  i === currentIndex ? 'h-1.5 w-6 bg-[#884e50]' : 'size-1.5 bg-[#d4cec8]'
-                }`}
-                title={`Card ${i + 1}`}
-              />
-            ))}
-          </div>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            gap: '6px',
+            marginTop: '12px',
+            marginBottom: '24px',
+          }}
+          role="status"
+          aria-label={`Card ${currentIndex + 1} of ${cards.length}`}
+        >
+          {cards.map((_, i) => (
+            <div
+              key={i}
+              style={{
+                width: i === currentIndex ? '20px' : '6px',
+                height: '6px',
+                borderRadius: '100px',
+                backgroundColor: i === currentIndex ? '#884e50' : '#D1C9C4',
+                transition: 'all 0.3s',
+              }}
+            />
+          ))}
         </div>
       </div>
     </div>

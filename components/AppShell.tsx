@@ -8,9 +8,9 @@ type Props = {
   variant?: 'default' | 'swipe';
 };
 
-/** Reserve space for fixed bottom nav + tab indicator + safe area (swipe screen). */
+/** Reserve space for floating pill nav + margin + safe area (swipe screen). */
 const SWIPE_MAIN_BOTTOM_PAD =
-  'pb-[calc(5.25rem+env(safe-area-inset-bottom,0px))]';
+  'pb-[calc(5rem+env(safe-area-inset-bottom,0px))]';
 
 function IconHeartNav({ filled }: { filled: boolean }) {
   return (
@@ -84,24 +84,13 @@ export function AppShell({ children, variant = 'default' }: Props) {
   const isSwipe = variant === 'swipe';
   const shellBg = isSwipe ? 'bg-swipe-canvas' : 'bg-page';
 
-  const navTone = (active: boolean) => (active ? 'text-[#7D3535]' : 'text-[#6B5F58]');
+  const rose = 'text-[#7D3535]';
+  const grey = 'text-[#6B5F58]';
 
-  const navLink = (active: boolean) =>
-    `relative flex min-h-[52px] flex-1 flex-col items-center justify-center gap-1 px-1 text-[11px] font-semibold tracking-wide transition-colors ${navTone(active)}`;
-
-  const TabIndicator = () => (
-    <div className="pointer-events-none grid h-[3px] w-full grid-cols-3 border-t border-black/[0.04] bg-white" aria-hidden>
-      <div className="flex justify-center">
-        {swipeOn && <span className="h-full w-10 rounded-t-sm bg-[#7D3535]" />}
-      </div>
-      <div className="flex justify-center">
-        {picksOn && <span className="h-full w-10 rounded-t-sm bg-[#7D3535]" />}
-      </div>
-      <div className="flex justify-center">
-        {settingsOn && <span className="h-full w-10 rounded-t-sm bg-[#7D3535]" />}
-      </div>
-    </div>
-  );
+  const pillTabClass = (active: boolean) =>
+    `flex min-w-0 flex-1 flex-col items-center gap-1 px-1 py-1 text-[11px] font-semibold tracking-wide transition-colors ${
+      active ? rose : grey
+    }`;
 
   return (
     <div
@@ -113,42 +102,49 @@ export function AppShell({ children, variant = 'default' }: Props) {
         className={
           isSwipe
             ? `flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden px-4 pt-[env(safe-area-inset-top,0px)] ${SWIPE_MAIN_BOTTOM_PAD}`
-            : 'flex-1 px-4 pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))] pt-[max(0.75rem,env(safe-area-inset-top,0px))]'
+            : 'flex-1 px-4 pb-[calc(5rem+env(safe-area-inset-bottom,0px))] pt-[max(0.75rem,env(safe-area-inset-top,0px))]'
         }
       >
         {children}
       </main>
 
-      <div
-        className="fixed bottom-0 left-0 right-0 z-40 flex justify-center"
-        style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
-      >
-        <div className="w-full max-w-[480px] overflow-hidden rounded-t-[20px] bg-white shadow-[0_-4px_24px_rgba(44,36,32,0.08)]">
-          <nav
-            className="flex w-full items-center justify-between px-2 pb-1 pt-3"
-            aria-label="Main navigation"
-          >
-            <Link href="/" className={navLink(swipeOn)}>
-              <span className={navTone(swipeOn)}>
-                <IconHeartNav filled={swipeOn} />
-              </span>
-              <span>Swipe</span>
-            </Link>
-            <Link href="/picks" className={navLink(picksOn)}>
-              <span className={navTone(picksOn)}>
-                <IconSparklesNav />
-              </span>
-              <span>Our Picks</span>
-            </Link>
-            <Link href="/settings" className={navLink(settingsOn)}>
-              <span className={navTone(settingsOn)}>
-                <IconCogNav />
-              </span>
-              <span>Settings</span>
-            </Link>
-          </nav>
-          <TabIndicator />
-        </div>
+      <div className="pointer-events-none fixed bottom-0 left-0 right-0 z-40 flex justify-center pb-[env(safe-area-inset-bottom,0px)]">
+        <nav
+          className="pointer-events-auto flex max-w-[480px] shrink-0 items-center justify-between gap-1 rounded-[100px] bg-white px-3 py-2.5 shadow-[0_4px_16px_rgba(44,36,32,0.12)]"
+          style={{
+            width: 'calc(100% - 32px)',
+            margin: '0 16px 16px 16px',
+          }}
+          aria-label="Main navigation"
+        >
+          <Link href="/" className={pillTabClass(swipeOn)}>
+            <IconHeartNav filled={swipeOn} />
+            <span>Swipe</span>
+            {swipeOn ? (
+              <span className="h-0.5 w-8 shrink-0 rounded-full bg-[#7D3535]" aria-hidden />
+            ) : (
+              <span className="h-0.5 w-8 shrink-0" aria-hidden />
+            )}
+          </Link>
+          <Link href="/picks" className={pillTabClass(picksOn)}>
+            <IconSparklesNav />
+            <span>Our Picks</span>
+            {picksOn ? (
+              <span className="h-0.5 w-8 shrink-0 rounded-full bg-[#7D3535]" aria-hidden />
+            ) : (
+              <span className="h-0.5 w-8 shrink-0" aria-hidden />
+            )}
+          </Link>
+          <Link href="/settings" className={pillTabClass(settingsOn)}>
+            <IconCogNav />
+            <span>Settings</span>
+            {settingsOn ? (
+              <span className="h-0.5 w-8 shrink-0 rounded-full bg-[#7D3535]" aria-hidden />
+            ) : (
+              <span className="h-0.5 w-8 shrink-0" aria-hidden />
+            )}
+          </Link>
+        </nav>
       </div>
     </div>
   );
