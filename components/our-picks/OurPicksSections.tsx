@@ -4,7 +4,13 @@ import { useState } from 'react';
 import ItemDetailModal, {
   type ItemDetailModalItem,
 } from '@/components/our-picks/ItemDetailModal';
+import { EmptyState } from '@/components/our-picks/EmptyState';
 import { PickCard } from '@/components/our-picks/PickCard';
+
+export type OurPicksSectionsProps = {
+  /** Empty array → empty state; omit → hardcoded demo cards (until Supabase). */
+  picks?: ItemDetailModalItem[];
+};
 
 const IMG = {
   SF_CITY_HALL:
@@ -35,8 +41,12 @@ export const OUR_PICKS_IMAGE_URLS: string[] = [
 ];
 
 /** Hardcoded Our Picks sections — no data fetch. */
-export function OurPicksSections() {
+export function OurPicksSections({ picks }: OurPicksSectionsProps = {}) {
   const [selectedItem, setSelectedItem] = useState<ItemDetailModalItem | null>(null);
+
+  if (picks !== undefined && picks.length === 0) {
+    return <EmptyState />;
+  }
 
   return (
     <>
