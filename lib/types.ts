@@ -3,8 +3,9 @@ export type WeddingOption = {
   category: string;
   title: string;
   description: string;
-  emoji: string;
-  gradient: string;
+  /** Fallback when `imageUrl` is absent */
+  emoji?: string;
+  gradient?: string;
   imageUrl?: string;
   rating?: number;
   address?: string;
