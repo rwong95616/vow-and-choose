@@ -170,6 +170,7 @@ function SettingsContent() {
                         aria-selected={state === s}
                         onClick={() => {
                           setState(s);
+                          setCity('');
                           setStateDropdownOpen(false);
                         }}
                         className={`w-full cursor-pointer px-4 py-[14px] text-left text-base text-[#2C2420] ${
@@ -187,7 +188,7 @@ function SettingsContent() {
                 type="text"
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
-                placeholder="City"
+                placeholder="City (optional)"
                 className={locationFieldClass}
                 style={{ fontFamily: 'var(--font-dm-sans)' }}
               />
