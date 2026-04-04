@@ -14,9 +14,7 @@ const SETTINGS_CARD_CLASS =
   'box-border flex w-full flex-col gap-3 rounded-[20px] border-0 bg-white p-[20px] shadow-[0_2px_8px_0_rgba(44,36,32,0.08)]';
 
 function SettingsContent() {
-  const copyCode = () => {
-    void navigator.clipboard.writeText(COUPLE_CODE);
-  };
+  const [copied, setCopied] = useState(false);
 
   return (
     <div className="w-full min-h-screen bg-[#FAF7F2] pt-[60px] px-[16px] pb-[8px]">
@@ -38,10 +36,14 @@ function SettingsContent() {
               type="button"
               className="flex items-center gap-2 rounded-full bg-[#884E50] px-4 py-2 text-white"
               style={{ fontFamily: 'var(--font-dm-sans)' }}
-              onClick={copyCode}
+              onClick={() => {
+                navigator.clipboard.writeText('ROSE42');
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+              }}
             >
               <Copy size={16} aria-hidden />
-              <span className="text-sm font-medium">Copy</span>
+              <span className="text-sm font-medium">{copied ? 'Copied!' : 'Copy'}</span>
             </button>
           </div>
           <p className="text-sm text-[#6B5F58]" style={{ fontFamily: 'var(--font-dm-sans)' }}>
