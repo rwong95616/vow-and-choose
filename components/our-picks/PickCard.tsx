@@ -27,10 +27,13 @@ const BADGE_CLASS: Record<PickCardProps['badge'], string> = {
   groom: 'bg-[#6B8F71] text-white text-sm px-4 py-1.5 rounded-full',
 };
 
-const CARD_BG: Record<NonNullable<PickCardProps['bgColor']>, string> = {
-  warm: 'bg-[#FAFAF5]',
+const CARD_SURFACE: Record<NonNullable<PickCardProps['bgColor']>, string> = {
+  warm: 'bg-[#FBF6E8]',
   white: 'bg-white',
 };
+
+const CARD_CHROME =
+  'rounded-[20px] shadow-[0_2px_8px_0_rgba(44,36,32,0.08)] border-0';
 
 const dmSansFont = { fontFamily: 'var(--font-dm-sans)' } as const;
 
@@ -45,7 +48,7 @@ export function PickCard({
 }: PickCardProps) {
   return (
     <div
-      className={`flex min-h-[100px] flex-row items-start gap-4 rounded-2xl p-4 ${CARD_BG[bgColor]}`}
+      className={`flex min-h-[100px] flex-row items-start gap-4 p-4 ${CARD_CHROME} ${CARD_SURFACE[bgColor]}`}
     >
       <img
         src={imageUrl}
@@ -69,7 +72,7 @@ export function PickCard({
             {swatchColors.map((color, i) => (
               <span
                 key={`${color}-${i}`}
-                className="h-6 w-6 shrink-0 rounded-full border border-black/5"
+                className="h-6 w-6 shrink-0 rounded-full shadow-[0_1px_3px_0_rgba(44,36,32,0.08)]"
                 style={{ backgroundColor: color }}
               />
             ))}

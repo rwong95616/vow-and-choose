@@ -91,6 +91,13 @@ export function AppShell({ children, variant = 'default' }: Props) {
       ? 'pt-[env(safe-area-inset-top,0px)]'
       : 'pt-[max(0.75rem,env(safe-area-inset-top,0px))]';
 
+  /** Floating nav overlays content; picks pages use Figma padding on the inner wrapper — no extra main bottom inset for nav. */
+  const mainPaddingBottom = isSwipe
+    ? SWIPE_MAIN_BOTTOM_PAD
+    : picksOn
+      ? 'pb-[env(safe-area-inset-bottom,0px)]'
+      : 'pb-[calc(5rem+env(safe-area-inset-bottom,0px))]';
+
   const rose = 'text-[#7D3535]';
   const grey = 'text-[#6B5F58]';
 
@@ -108,8 +115,8 @@ export function AppShell({ children, variant = 'default' }: Props) {
       <main
         className={
           isSwipe
-            ? `flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden px-4 ${mainPaddingTop} ${SWIPE_MAIN_BOTTOM_PAD}`
-            : `flex-1 px-4 pb-[calc(5rem+env(safe-area-inset-bottom,0px))] ${mainPaddingTop}`
+            ? `flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden px-4 ${mainPaddingTop} ${mainPaddingBottom}`
+            : `flex-1 px-4 ${mainPaddingBottom} ${mainPaddingTop}`
         }
       >
         {children}
