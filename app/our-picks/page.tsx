@@ -2,10 +2,7 @@
 
 import { useEffect } from 'react';
 import { AppShell } from '@/components/AppShell';
-import {
-  OUR_PICKS_IMAGE_URLS,
-  OurPicksSections,
-} from '@/components/our-picks/OurPicksSections';
+import { OUR_PICKS_IMAGE_URLS, OurPicksSections } from '@/components/our-picks/OurPicksSections';
 
 export default function OurPicksPage() {
   useEffect(() => {

@@ -12,6 +12,7 @@ export type PickCardProps = {
   imageUrl: string;
   swatchColors?: string[];
   bgColor?: 'warm' | 'white';
+  onClick?: () => void;
 };
 
 const BADGE_LABEL: Record<PickCardProps['badge'], string> = {
@@ -42,10 +43,19 @@ export function PickCard({
   badge,
   imageUrl,
   swatchColors,
+  onClick,
 }: PickCardProps) {
   return (
     <div
-      className={`flex h-24 w-full flex-row items-center gap-4 overflow-hidden rounded-[20px] p-4 shadow-[0_2px_8px_0_rgba(44,36,32,0.08)] ${CARD_CANVAS[badge]}`}
+      className={`flex h-24 w-full flex-row items-center gap-4 overflow-hidden rounded-[20px] p-4 shadow-[0_2px_8px_0_rgba(44,36,32,0.08)] ${CARD_CANVAS[badge]} ${onClick ? 'cursor-pointer' : ''}`}
+      onClick={
+        onClick
+          ? () => {
+              console.log('card clicked', name);
+              onClick();
+            }
+          : undefined
+      }
     >
       <div className="h-16 w-16 shrink-0 overflow-hidden rounded-[14px] bg-[#E8E4DC]">
         <img
