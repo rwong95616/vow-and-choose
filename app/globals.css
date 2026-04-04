@@ -1,0 +1,48 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Single source for primary CTA — use inline style + var() on <button> where Safari ignores bg-* */
+:root {
+  --vow-primary: #884e50;
+}
+
+body {
+  @apply bg-page text-ink antialiased;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Swipe category chips — strip UA / Safari button chrome so rounded pills + fills apply */
+button.vow-category-tab {
+  -webkit-appearance: none;
+  appearance: none;
+  background-image: none;
+}
+
+/* Join couple — appearance reset; colors come from inline styles in StepConnect (Safari-safe) */
+.join-couple-btn {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.join-couple-btn:disabled {
+  opacity: 1;
+}
+
+/* Location city field — keep white fill + charcoal text (no WebKit autofill blue/yellow) */
+.location-city-input:-webkit-autofill,
+.location-city-input:-webkit-autofill:hover,
+.location-city-input:-webkit-autofill:focus,
+.location-city-input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
+  box-shadow: 0 0 0 1000px #ffffff inset !important;
+  -webkit-text-fill-color: #1d1d1b !important;
+  caret-color: #1d1d1b;
+}
