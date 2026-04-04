@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ChevronDown, ChevronRight, ChevronUp, Copy } from 'lucide-react';
+import { ChevronDown, ChevronUp, Copy } from 'lucide-react';
 import { AppShell } from '@/components/AppShell';
 import { OnboardingFlow } from '@/components/onboarding/OnboardingFlow';
 import { useCouple } from '@/lib/hooks/useCouple';
@@ -125,16 +125,13 @@ function SettingsContent() {
                   Change
                 </button>
               </div>
-              <div className="flex items-center justify-between gap-4">
-                <div className="min-w-0">
-                  <p className="text-lg font-bold text-[#2C2420]" style={{ fontFamily: 'var(--font-dm-sans)' }}>
-                    {state}
-                  </p>
-                  <p className="text-sm text-[#6B5F58]" style={{ fontFamily: 'var(--font-dm-sans)' }}>
-                    {city}
-                  </p>
-                </div>
-                <ChevronRight size={20} className="shrink-0 text-[#6B5F58]" aria-hidden />
+              <div className="min-w-0">
+                <p className="text-lg font-bold text-[#2C2420]" style={{ fontFamily: 'var(--font-dm-sans)' }}>
+                  {state}
+                </p>
+                <p className="text-sm text-[#6B5F58]" style={{ fontFamily: 'var(--font-dm-sans)' }}>
+                  {city}
+                </p>
               </div>
             </>
           ) : (
