@@ -106,6 +106,8 @@ export function AppShell({ children, variant = 'default' }: Props) {
       active ? rose : grey
     }`;
 
+  const mainHorizontal = settingsOn ? 'px-0' : 'px-4';
+
   return (
     <div
       className={`mx-auto flex max-w-[480px] min-h-0 flex-col overflow-hidden ${shellBg} ${
@@ -116,7 +118,7 @@ export function AppShell({ children, variant = 'default' }: Props) {
         className={
           isSwipe
             ? `flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden px-4 ${mainPaddingTop} ${mainPaddingBottom}`
-            : `flex-1 px-4 ${mainPaddingBottom} ${mainPaddingTop}`
+            : `flex-1 ${mainHorizontal} ${mainPaddingBottom} ${mainPaddingTop}`
         }
       >
         {children}
