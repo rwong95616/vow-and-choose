@@ -10,11 +10,36 @@ import { isOnboardingComplete } from '@/lib/storage';
 
 const COUPLE_CODE = 'ROSE42';
 
+/** Chevron-down for custom-styled `<select>` (native UI hidden via appearance-none). */
+const SELECT_DROPDOWN_ARROW =
+  'url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2720%27 height=%2720%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%236B5F58%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3E%3Cpath d=%27m6 9 6 6 6-6%27/%3E%3C/svg%3E")';
+
+const US_STATE_OPTIONS = [
+  'California',
+  'New York',
+  'Texas',
+  'Florida',
+  'Illinois',
+  'Arizona',
+  'Washington',
+  'Colorado',
+  'Pennsylvania',
+  'Ohio',
+  'Georgia',
+  'North Carolina',
+] as const;
+
 const SETTINGS_CARD_CLASS =
   'box-border flex w-full flex-col gap-3 rounded-[20px] border-0 bg-white p-[20px] shadow-[0_2px_8px_0_rgba(44,36,32,0.08)]';
 
 function SettingsContent() {
   const [copied, setCopied] = useState(false);
+  const [editingLocation, setEditingLocation] = useState(false);
+  const [state, setState] = useState('California');
+  const [city, setCity] = useState('San Francisco');
+
+  const locationFieldClass =
+    'w-full rounded-[12px] border border-[#D3D1C7] py-[14px] px-[16px] text-[#2C2420] outline-none';
 
   return (
     <div className="w-full min-h-screen bg-[#FAF7F2] pt-[60px] px-[16px] pb-[8px]">
@@ -52,27 +77,71 @@ function SettingsContent() {
         </div>
 
         <div className={SETTINGS_CARD_CLASS}>
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-semibold tracking-widest text-[#C4A96B]">WEDDING LOCATION</p>
-            <button
-              type="button"
-              className="text-sm font-medium text-[#884E50]"
-              style={{ fontFamily: 'var(--font-dm-sans)' }}
-            >
-              Change
-            </button>
-          </div>
-          <div className="flex items-center justify-between gap-4">
-            <div className="min-w-0">
-              <p className="text-lg font-bold text-[#2C2420]" style={{ fontFamily: 'var(--font-dm-sans)' }}>
-                California
-              </p>
-              <p className="text-sm text-[#6B5F58]" style={{ fontFamily: 'var(--font-dm-sans)' }}>
-                San Francisco
-              </p>
-            </div>
-            <ChevronRight size={20} className="shrink-0 text-[#6B5F58]" aria-hidden />
-          </div>
+          {!editingLocation ? (
+            <>
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-semibold tracking-widest text-[#C4A96B]">WEDDING LOCATION</p>
+                <button
+                  type="button"
+                  className="text-sm font-medium text-[#884E50]"
+                  style={{ fontFamily: 'var(--font-dm-sans)' }}
+                  onClick={() => setEditingLocation(true)}
+                >
+                  Change
+                </button>
+              </div>
+              <div className="flex items-center justify-between gap-4">
+                <div className="min-w-0">
+                  <p className="text-lg font-bold text-[#2C2420]" style={{ fontFamily: 'var(--font-dm-sans)' }}>
+                    {state}
+                  </p>
+                  <p className="text-sm text-[#6B5F58]" style={{ fontFamily: 'var(--font-dm-sans)' }}>
+                    {city}
+                  </p>
+                </div>
+                <ChevronRight size={20} className="shrink-0 text-[#6B5F58]" aria-hidden />
+              </div>
+            </>
+          ) : (
+            <>
+              <p className="text-xs font-semibold tracking-widest text-[#C4A96B]">WEDDING LOCATION</p>
+              <select
+                value={state}
+                onChange={(e) => setState(e.target.value)}
+                aria-label="State"
+                className={`${locationFieldClass} appearance-none bg-white pr-[44px]`}
+                style={{
+                  fontFamily: 'var(--font-dm-sans)',
+                  backgroundImage: SELECT_DROPDOWN_ARROW,
+                  backgroundRepeat: 'no-repeat',
+                  backgroundPosition: 'right 16px center',
+                  backgroundSize: '20px 20px',
+                }}
+              >
+                {US_STATE_OPTIONS.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </select>
+              <input
+                type="text"
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                placeholder="City"
+                className={locationFieldClass}
+                style={{ fontFamily: 'var(--font-dm-sans)' }}
+              />
+              <button
+                type="button"
+                className="w-full rounded-full bg-[#884E50] py-4 font-medium text-white"
+                style={{ fontFamily: 'var(--font-dm-sans)' }}
+                onClick={() => setEditingLocation(false)}
+              >
+                Save location
+              </button>
+            </>
+          )}
         </div>
 
         <div className={SETTINGS_CARD_CLASS}>
