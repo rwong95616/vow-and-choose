@@ -8,8 +8,6 @@ import { OnboardingFlow } from '@/components/onboarding/OnboardingFlow';
 import { useCouple } from '@/lib/hooks/useCouple';
 import { isOnboardingComplete } from '@/lib/storage';
 
-const COUPLE_CODE = 'ROSE42';
-
 const ALL_STATES = [
   'Alabama',
   'Alaska',
@@ -67,11 +65,18 @@ const SETTINGS_CARD_CLASS =
   'box-border flex w-full flex-col gap-3 rounded-[20px] border-0 bg-white p-[20px] shadow-[0_2px_8px_0_rgba(44,36,32,0.08)]';
 
 function SettingsContent() {
+  const { couple, ready, updateLocation } = useCouple();
   const [copied, setCopied] = useState(false);
   const [editingLocation, setEditingLocation] = useState(false);
-  const [state, setState] = useState('California');
-  const [city, setCity] = useState('San Francisco');
+  const [state, setState] = useState(couple?.locationState ?? '');
+  const [city, setCity] = useState(couple?.locationCity ?? '');
   const [stateDropdownOpen, setStateDropdownOpen] = useState(false);
+
+  useEffect(() => {
+    if (!ready || editingLocation) return;
+    setState(couple?.locationState ?? '');
+    setCity(couple?.locationCity ?? '');
+  }, [ready, couple?.locationState, couple?.locationCity, editingLocation]);
 
   const locationFieldClass =
     'w-full rounded-[12px] border border-[#D3D1C7] py-[14px] px-[16px] text-[#2C2420] outline-none';
@@ -90,14 +95,14 @@ function SettingsContent() {
           <p className="text-xs font-semibold tracking-widest text-[#C4A96B]">YOUR COUPLE CODE</p>
           <div className="flex items-center justify-between gap-4">
             <span className="font-[family-name:var(--font-playfair)] text-[32px] font-bold text-[#2C2420]">
-              {COUPLE_CODE}
+              {couple?.coupleCode ?? ''}
             </span>
             <button
               type="button"
               className="flex items-center gap-2 rounded-full bg-[#884E50] px-4 py-2 text-white"
               style={{ fontFamily: 'var(--font-dm-sans)' }}
               onClick={() => {
-                navigator.clipboard.writeText('ROSE42');
+                navigator.clipboard.writeText(couple?.coupleCode ?? '');
                 setCopied(true);
                 setTimeout(() => setCopied(false), 2000);
               }}
@@ -193,7 +198,8 @@ function SettingsContent() {
                 type="button"
                 className="w-full rounded-full bg-[#884E50] py-4 font-medium text-white"
                 style={{ fontFamily: 'var(--font-dm-sans)' }}
-                onClick={() => {
+                onClick={async () => {
+                  await updateLocation(state, city);
                   setEditingLocation(false);
                   setStateDropdownOpen(false);
                 }}
