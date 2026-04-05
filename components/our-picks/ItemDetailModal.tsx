@@ -8,7 +8,7 @@ export type ItemDetailModalItem = {
   category: string;
   location?: string;
   description?: string;
-  badge: 'our-pick' | 'bride' | 'groom';
+  badge: 'our-pick' | 'bride' | 'groom' | 'both';
   imageUrl: string;
 };
 
@@ -22,12 +22,14 @@ const BADGE_LABEL: Record<ItemDetailModalItem['badge'], string> = {
   'our-pick': 'Our Pick',
   bride: 'Bride',
   groom: 'Groom',
+  both: 'Both',
 };
 
 const BADGE_SURFACE: Record<ItemDetailModalItem['badge'], string> = {
   'our-pick': 'bg-[#C4A96B]',
   bride: 'bg-[#E8857A]',
   groom: 'bg-[#6B8F71]',
+  both: 'bg-[#8B7355]',
 };
 
 const sheetTransition = {

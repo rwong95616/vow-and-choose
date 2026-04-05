@@ -47,7 +47,7 @@ export function useSwipes(
   const persistSwipe = useCallback(
     async (itemId: string, decision: Decision) => {
       if (!coupleId || !userRole) return;
-      void supabase.from('swipes').upsert(
+      const { error } = await supabase.from('swipes').upsert(
         {
           couple_id: coupleId,
           user_role: userRole,
@@ -57,6 +57,10 @@ export function useSwipes(
         },
         { onConflict: 'couple_id,user_role,category,item_id' }
       );
+      if (error) {
+        console.error('persistSwipe error:', error);
+        throw error;
+      }
     },
     [coupleId, userRole, category, supabase]
   );

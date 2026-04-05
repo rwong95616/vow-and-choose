@@ -1,204 +1,211 @@
 'use client';
 
-import { useState } from 'react';
+import { Loader2 } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import ItemDetailModal, {
   type ItemDetailModalItem,
 } from '@/components/our-picks/ItemDetailModal';
 import { EmptyState } from '@/components/our-picks/EmptyState';
 import { PickCard } from '@/components/our-picks/PickCard';
+import { CATEGORY_LABELS, CATEGORY_ORDER, type CategoryId } from '@/data/options';
+import { findStaticOption } from '@/lib/lookupOption';
+import { useCouple } from '@/lib/hooks/useCouple';
+import { usePicks, type SwipeRow } from '@/lib/hooks/usePicks';
+import { useVenues } from '@/lib/hooks/useVenues';
+import { resolveVenueImageUrl } from '@/lib/venueImage';
+import type { WeddingOption } from '@/lib/types';
 
-export type OurPicksSectionsProps = {
-  /** Empty array → empty state; omit → hardcoded demo cards (until Supabase). */
-  picks?: ItemDetailModalItem[];
+type AggregatedPick = {
+  category: string;
+  item_id: string;
+  badge: 'both' | 'bride' | 'groom';
 };
 
-const IMG = {
-  SF_CITY_HALL:
-    'https://images.unsplash.com/photo-1522673606160-8d399438c4bc?w=800&q=80',
-  PALACE_HOTEL:
-    'https://images.unsplash.com/photo-1501594907352-04cda38ebc29?w=800&q=80',
-  FAIRMONT:
-    'https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?w=800&q=80',
-  BLUSH_GOLD:
-    'https://images.unsplash.com/photo-1767050292710-8e5da59ec5d8?w=800&q=80',
-  SAGE_IVORY:
-    'https://images.unsplash.com/photo-1766043373136-f2566b286edc?w=800&q=80',
-  GARDEN_ROSES_PEONIES:
-    'https://images.unsplash.com/photo-1749964705495-2099c9c09b9f?w=800&q=80',
-  LIVE_JAZZ:
-    'https://images.unsplash.com/photo-1677845100757-f4ff89b22df9?w=800&q=80',
-} as const;
+function aggregateYesSwipes(swipes: SwipeRow[]): AggregatedPick[] {
+  const yes = swipes.filter((s) => s.decision === 'yes');
+  const byKey = new Map<
+    string,
+    { category: string; item_id: string; bride: boolean; groom: boolean }
+  >();
 
-/** All `imageUrl` values used by Our Picks cards (display order). */
-export const OUR_PICKS_IMAGE_URLS: string[] = [
-  IMG.SF_CITY_HALL,
-  IMG.PALACE_HOTEL,
-  IMG.FAIRMONT,
-  IMG.BLUSH_GOLD,
-  IMG.SAGE_IVORY,
-  IMG.GARDEN_ROSES_PEONIES,
-  IMG.LIVE_JAZZ,
-];
+  for (const s of yes) {
+    const key = `${s.category}::${s.item_id}`;
+    const prev = byKey.get(key) ?? {
+      category: s.category,
+      item_id: s.item_id,
+      bride: false,
+      groom: false,
+    };
+    if (s.user_role === 'bride') prev.bride = true;
+    if (s.user_role === 'groom') prev.groom = true;
+    byKey.set(key, prev);
+  }
 
-/** Hardcoded Our Picks sections — no data fetch. */
-export function OurPicksSections({ picks }: OurPicksSectionsProps = {}) {
+  const out: AggregatedPick[] = [];
+  for (const v of byKey.values()) {
+    let badge: AggregatedPick['badge'];
+    if (v.bride && v.groom) badge = 'both';
+    else if (v.bride) badge = 'bride';
+    else badge = 'groom';
+    out.push({ category: v.category, item_id: v.item_id, badge });
+  }
+  return out;
+}
+
+function resolveDisplay(
+  category: string,
+  itemId: string,
+  venues: WeddingOption[]
+): {
+  name: string;
+  description?: string;
+  imageUrl: string;
+  location?: string;
+} {
+  if (category === 'venue') {
+    const v = venues.find((o) => o.id === itemId);
+    if (v) {
+      return {
+        name: v.title,
+        description: v.description,
+        imageUrl: resolveVenueImageUrl(v.imageUrl),
+        location: v.address ?? undefined,
+      };
+    }
+  } else {
+    const o = findStaticOption(category, itemId);
+    if (o) {
+      return {
+        name: o.title,
+        description: o.description,
+        imageUrl: o.imageUrl?.trim() ? o.imageUrl : resolveVenueImageUrl(undefined),
+      };
+    }
+  }
+  return {
+    name: itemId,
+    imageUrl: resolveVenueImageUrl(undefined),
+  };
+}
+
+function categoryHeading(categoryId: string): string {
+  const id = categoryId as CategoryId;
+  if (id in CATEGORY_LABELS) {
+    return CATEGORY_LABELS[id].label.toUpperCase();
+  }
+  return categoryId.toUpperCase();
+}
+
+function modalCategoryLabel(categoryId: string): string {
+  const id = categoryId as CategoryId;
+  if (id in CATEGORY_LABELS) return CATEGORY_LABELS[id].label.toUpperCase();
+  return categoryId.toUpperCase();
+}
+
+export function OurPicksSections() {
+  const { couple, ready } = useCouple();
+  const coupleId = couple?.coupleId;
+  const { swipes, loading: picksLoading } = usePicks(coupleId);
+  const { venues, loading: venuesLoading } = useVenues(couple?.locationState, couple?.locationCity);
+
   const [selectedItem, setSelectedItem] = useState<ItemDetailModalItem | null>(null);
 
-  if (picks !== undefined && picks.length === 0) {
+  const aggregated = useMemo(() => aggregateYesSwipes(swipes), [swipes]);
+
+  const needsVenueResolution = useMemo(
+    () => aggregated.some((p) => p.category === 'venue'),
+    [aggregated]
+  );
+
+  const loading =
+    !ready || picksLoading || (needsVenueResolution && venuesLoading);
+
+  console.log('couple:', couple);
+  console.log('swipes:', swipes);
+  console.log('loading:', loading);
+  console.log('ready:', ready);
+
+  const byCategory = useMemo(() => {
+    const map = new Map<string, AggregatedPick[]>();
+    for (const p of aggregated) {
+      const list = map.get(p.category) ?? [];
+      list.push(p);
+      map.set(p.category, list);
+    }
+    for (const [, list] of map) {
+      list.sort((a, b) =>
+        resolveDisplay(a.category, a.item_id, venues).name.localeCompare(
+          resolveDisplay(b.category, b.item_id, venues).name
+        )
+      );
+    }
+    return map;
+  }, [aggregated, venues]);
+
+  const orderedCategories = useMemo(() => {
+    const keys = new Set(byCategory.keys());
+    const ordered: string[] = [];
+    for (const id of CATEGORY_ORDER) {
+      if (keys.has(id)) ordered.push(id);
+    }
+    for (const k of keys) {
+      if (!ordered.includes(k)) ordered.push(k);
+    }
+    return ordered;
+  }, [byCategory]);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[200px] w-full flex-1 items-center justify-center py-16">
+        <Loader2 className="size-9 animate-spin text-[#884E50]" aria-label="Loading" />
+      </div>
+    );
+  }
+
+  if (aggregated.length === 0) {
     return <EmptyState />;
   }
 
   return (
     <>
       <div className="flex w-full flex-col items-start">
-        <section className="mb-[24px] w-full">
-          <h2 className="mb-4 text-xs font-semibold tracking-widest text-[#C4A96B]">VENUE</h2>
-          <div className="flex flex-col gap-3">
-            <PickCard
-              name="San Francisco City Hall"
-              location="San Francisco, CA"
-              badge="our-pick"
-              imageUrl={IMG.SF_CITY_HALL}
-              bgColor="warm"
-              onClick={() =>
-                setSelectedItem({
-                  name: 'San Francisco City Hall',
-                  category: 'VENUE',
-                  location: 'San Francisco, CA',
-                  description:
-                    'Iconic Beaux-Arts architecture with stunning grand staircase',
-                  badge: 'our-pick',
-                  imageUrl: IMG.SF_CITY_HALL,
-                })
-              }
-            />
-            <PickCard
-              name="The Palace Hotel"
-              location="San Francisco, CA"
-              badge="bride"
-              imageUrl={IMG.PALACE_HOTEL}
-              bgColor="white"
-              onClick={() =>
-                setSelectedItem({
-                  name: 'The Palace Hotel',
-                  category: 'VENUE',
-                  location: 'San Francisco, CA',
-                  description: 'Grand historic hotel with opulent ballrooms',
-                  badge: 'bride',
-                  imageUrl: IMG.PALACE_HOTEL,
-                })
-              }
-            />
-            <PickCard
-              name="The Fairmont"
-              location="San Francisco, CA"
-              badge="groom"
-              imageUrl={IMG.FAIRMONT}
-              bgColor="white"
-              onClick={() =>
-                setSelectedItem({
-                  name: 'The Fairmont',
-                  category: 'VENUE',
-                  location: 'San Francisco, CA',
-                  description: undefined,
-                  badge: 'groom',
-                  imageUrl: IMG.FAIRMONT,
-                })
-              }
-            />
-          </div>
-        </section>
+        {orderedCategories.map((catId) => {
+          const picks = byCategory.get(catId);
+          if (!picks?.length) return null;
+          return (
+            <section key={catId} className="mb-[24px] w-full last:mb-0">
+              <h2 className="mb-4 text-xs font-semibold tracking-widest text-[#C4A96B]">
+                {categoryHeading(catId)}
+              </h2>
+              <div className="flex flex-col gap-3">
+                {picks.map((p) => {
+                  const meta = resolveDisplay(p.category, p.item_id, venues);
 
-        <section className="mb-[24px] w-full">
-          <h2 className="mb-4 text-xs font-semibold tracking-widest text-[#C4A96B]">COLOR THEME</h2>
-          <div className="flex flex-col gap-3">
-            <PickCard
-              name="Blush & Gold"
-              location=""
-              badge="our-pick"
-              imageUrl={IMG.BLUSH_GOLD}
-              swatchColors={['#F2A7B0', '#C9A84C', '#FFFFFF']}
-              bgColor="warm"
-              onClick={() =>
-                setSelectedItem({
-                  name: 'Blush & Gold',
-                  category: 'COLOR THEME',
-                  location: undefined,
-                  description:
-                    'Soft romance with warm metallic highlights.',
-                  badge: 'our-pick',
-                  imageUrl: IMG.BLUSH_GOLD,
-                })
-              }
-            />
-            <PickCard
-              name="Sage & Ivory"
-              location=""
-              badge="bride"
-              imageUrl={IMG.SAGE_IVORY}
-              swatchColors={['#6B8F71', '#C5C97A', '#6B7B5A']}
-              bgColor="white"
-              onClick={() =>
-                setSelectedItem({
-                  name: 'Sage & Ivory',
-                  category: 'COLOR THEME',
-                  location: undefined,
-                  description: 'Natural calm with timeless garden elegance.',
-                  badge: 'bride',
-                  imageUrl: IMG.SAGE_IVORY,
-                })
-              }
-            />
-          </div>
-        </section>
-
-        <section className="mb-[24px] w-full">
-          <h2 className="mb-4 text-xs font-semibold tracking-widest text-[#C4A96B]">
-            FLORALS & DECOR
-          </h2>
-          <div className="flex flex-col gap-3">
-            <PickCard
-              name="Garden Roses & Peonies"
-              description="Lush, romantic blooms"
-              badge="our-pick"
-              imageUrl={IMG.GARDEN_ROSES_PEONIES}
-              bgColor="warm"
-              onClick={() =>
-                setSelectedItem({
-                  name: 'Garden Roses & Peonies',
-                  category: 'FLORALS & DECOR',
-                  location: undefined,
-                  description: 'Lush, romantic blooms',
-                  badge: 'our-pick',
-                  imageUrl: IMG.GARDEN_ROSES_PEONIES,
-                })
-              }
-            />
-          </div>
-        </section>
-
-        <section className="w-full">
-          <h2 className="mb-4 text-xs font-semibold tracking-widest text-[#C4A96B]">ENTERTAINMENT</h2>
-          <div className="flex flex-col gap-3">
-            <PickCard
-              name="Live Jazz Band"
-              description="Sophisticated swing music"
-              badge="groom"
-              imageUrl={IMG.LIVE_JAZZ}
-              bgColor="white"
-              onClick={() =>
-                setSelectedItem({
-                  name: 'Live Jazz Band',
-                  category: 'ENTERTAINMENT',
-                  location: undefined,
-                  description: 'Sophisticated swing music',
-                  badge: 'groom',
-                  imageUrl: IMG.LIVE_JAZZ,
-                })
-              }
-            />
-          </div>
-        </section>
+                  return (
+                    <PickCard
+                      key={`${p.category}-${p.item_id}`}
+                      name={meta.name}
+                      location={meta.location}
+                      description={meta.description}
+                      badge={p.badge}
+                      imageUrl={meta.imageUrl}
+                      onClick={() =>
+                        setSelectedItem({
+                          name: meta.name,
+                          category: modalCategoryLabel(p.category),
+                          location: meta.location,
+                          description: meta.description,
+                          badge: p.badge,
+                          imageUrl: meta.imageUrl,
+                        })
+                      }
+                    />
+                  );
+                })}
+              </div>
+            </section>
+          );
+        })}
       </div>
 
       <ItemDetailModal

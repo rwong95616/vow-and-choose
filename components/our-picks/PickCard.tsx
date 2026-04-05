@@ -8,7 +8,7 @@ export type PickCardProps = {
   location?: string;
   /** When set, shown below the name instead of the location row (no pin). */
   description?: string;
-  badge: 'our-pick' | 'bride' | 'groom';
+  badge: 'our-pick' | 'bride' | 'groom' | 'both';
   imageUrl: string;
   swatchColors?: string[];
   bgColor?: 'warm' | 'white';
@@ -19,19 +19,22 @@ const BADGE_LABEL: Record<PickCardProps['badge'], string> = {
   'our-pick': 'Our Pick',
   bride: 'Bride',
   groom: 'Groom',
+  both: 'Both',
 };
 
 const BADGE_SURFACE: Record<PickCardProps['badge'], string> = {
   'our-pick': 'bg-[#B5973A]',
   bride: 'bg-[#E8857A]',
   groom: 'bg-[#6B8F71]',
+  both: 'bg-[#C4A96B]',
 };
 
-/** Card canvas: our-pick = cream, bride/groom = white. */
+/** Card canvas: our-pick / both = cream, bride/groom = white. */
 const CARD_CANVAS: Record<PickCardProps['badge'], string> = {
   'our-pick': 'bg-[#FBF6E8]',
   bride: 'bg-white',
   groom: 'bg-white',
+  both: 'bg-[#FBF6E8]',
 };
 
 const dmSansFont = { fontFamily: 'var(--font-dm-sans)' } as const;
