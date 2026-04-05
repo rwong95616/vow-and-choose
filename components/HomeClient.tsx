@@ -20,7 +20,6 @@ export function HomeClient() {
   const forceOnboarding = searchParams.get('onboarding') === '1';
 
   const { couple, ready, refresh } = useCouple();
-  console.log('couple from useCouple:', couple);
   const [category, setCategory] = useState<CategoryId>('venue');
   const [onboardingDone, setOnboardingDone] = useState(false);
 
@@ -107,13 +106,7 @@ export function HomeClient() {
               cards={cards}
               decisions={decisions}
               onSwipeStart={(itemId, decision) => {
-                persistSwipe(itemId, decision)
-                  .then(() => {
-                    console.log('swipe saved:', itemId, decision);
-                  })
-                  .catch((err) => {
-                    console.error('swipe failed:', err);
-                  });
+                void persistSwipe(itemId, decision);
               }}
               onSwipeComplete={(itemId, decision) => {
                 applyLocalSwipe(itemId, decision);

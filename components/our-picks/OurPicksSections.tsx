@@ -120,11 +120,6 @@ export function OurPicksSections() {
   const loading =
     !ready || picksLoading || (needsVenueResolution && venuesLoading);
 
-  console.log('couple:', couple);
-  console.log('swipes:', swipes);
-  console.log('loading:', loading);
-  console.log('ready:', ready);
-
   const byCategory = useMemo(() => {
     const map = new Map<string, AggregatedPick[]>();
     for (const p of aggregated) {
