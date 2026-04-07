@@ -64,6 +64,12 @@ const ALL_STATES = [
 const SETTINGS_CARD_CLASS =
   'box-border flex w-full flex-col gap-3 rounded-[20px] border-0 bg-white p-[20px] shadow-[0_2px_8px_0_rgba(44,36,32,0.08)]';
 
+type CitySuggestion = {
+  placeId: string;
+  description: string;
+  city: string;
+};
+
 function SettingsContent() {
   const { couple, ready, updateLocation } = useCouple();
   const [copied, setCopied] = useState(false);
@@ -71,12 +77,59 @@ function SettingsContent() {
   const [state, setState] = useState(couple?.locationState ?? '');
   const [city, setCity] = useState(couple?.locationCity ?? '');
   const [stateDropdownOpen, setStateDropdownOpen] = useState(false);
+  const [citySuggestions, setCitySuggestions] = useState<CitySuggestion[]>([]);
+  const [cityDropdownOpen, setCityDropdownOpen] = useState(false);
+  const [cityLoading, setCityLoading] = useState(false);
 
   useEffect(() => {
     if (!ready || editingLocation) return;
     setState(couple?.locationState ?? '');
     setCity(couple?.locationCity ?? '');
   }, [ready, couple?.locationState, couple?.locationCity, editingLocation]);
+
+  useEffect(() => {
+    if (!editingLocation) {
+      setCitySuggestions([]);
+      setCityDropdownOpen(false);
+      setCityLoading(false);
+      return;
+    }
+
+    const q = city.trim();
+    if (!q) {
+      setCitySuggestions([]);
+      setCityDropdownOpen(false);
+      setCityLoading(false);
+      return;
+    }
+
+    const controller = new AbortController();
+    const timer = setTimeout(async () => {
+      setCityLoading(true);
+      try {
+        const params = new URLSearchParams({ input: q, state: state.trim() });
+        const res = await fetch(`/api/places/cities?${params.toString()}`, {
+          signal: controller.signal,
+        });
+        const data = (await res.json().catch(() => ({}))) as {
+          predictions?: CitySuggestion[];
+        };
+        const predictions = Array.isArray(data.predictions) ? data.predictions : [];
+        setCitySuggestions(predictions);
+        setCityDropdownOpen(predictions.length > 0);
+      } catch {
+        setCitySuggestions([]);
+        setCityDropdownOpen(false);
+      } finally {
+        setCityLoading(false);
+      }
+    }, 200);
+
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [city, editingLocation]);
 
   const locationFieldClass =
     'w-full rounded-[12px] border border-[#D3D1C7] py-[14px] px-[16px] text-[#2C2420] outline-none';
@@ -193,7 +246,40 @@ function SettingsContent() {
                 placeholder="City (optional)"
                 className={locationFieldClass}
                 style={{ fontFamily: 'var(--font-dm-sans)' }}
+                onFocus={() => {
+                  if (citySuggestions.length > 0) setCityDropdownOpen(true);
+                }}
               />
+              {cityDropdownOpen ? (
+                <div
+                  className="mt-1 max-h-[240px] overflow-y-auto rounded-[14px] border-[0.5px] border-solid border-[#D4CEC8] bg-white shadow-[0_8px_24px_0_rgba(44,36,32,0.12)]"
+                  role="listbox"
+                >
+                  {cityLoading ? (
+                    <div
+                      className="w-full px-4 py-[14px] text-left text-base text-[#6B5F58]"
+                      style={{ fontFamily: 'var(--font-dm-sans)' }}
+                    >
+                      Loading cities...
+                    </div>
+                  ) : (
+                    citySuggestions.map((s) => (
+                      <div
+                        key={s.placeId}
+                        role="option"
+                        onClick={() => {
+                          setCity(s.city || s.description.split(',')[0] || '');
+                          setCityDropdownOpen(false);
+                        }}
+                        className="w-full cursor-pointer px-4 py-[14px] text-left text-base text-[#2C2420] bg-white hover:bg-[#FAF7F2]"
+                        style={{ fontFamily: 'var(--font-dm-sans)' }}
+                      >
+                        {s.city}
+                      </div>
+                    ))
+                  )}
+                </div>
+              ) : null}
               <button
                 type="button"
                 className="w-full rounded-full bg-[#884E50] py-4 font-medium text-white"
@@ -202,6 +288,7 @@ function SettingsContent() {
                   await updateLocation(state, city);
                   setEditingLocation(false);
                   setStateDropdownOpen(false);
+                  setCityDropdownOpen(false);
                 }}
               >
                 Save location
