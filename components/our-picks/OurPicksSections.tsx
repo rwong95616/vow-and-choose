@@ -191,12 +191,18 @@ export function OurPicksSections() {
       list.push(p);
       map.set(p.category, list);
     }
+    const badgeRank = (badge: AggregatedPick['badge']) =>
+      badge === 'both' ? 0 : badge === 'bride' ? 1 : 2;
+
     for (const [, list] of map) {
-      list.sort((a, b) =>
-        resolveDisplay(a.category, a.item_id, venueById).name.localeCompare(
+      list.sort((a, b) => {
+        const ra = badgeRank(a.badge);
+        const rb = badgeRank(b.badge);
+        if (ra !== rb) return ra - rb;
+        return resolveDisplay(a.category, a.item_id, venueById).name.localeCompare(
           resolveDisplay(b.category, b.item_id, venueById).name
-        )
-      );
+        );
+      });
     }
     return map;
   }, [aggregated, venueById]);
