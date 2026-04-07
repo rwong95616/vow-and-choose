@@ -80,11 +80,15 @@ function SettingsContent() {
   const [citySuggestions, setCitySuggestions] = useState<CitySuggestion[]>([]);
   const [cityDropdownOpen, setCityDropdownOpen] = useState(false);
   const [cityLoading, setCityLoading] = useState(false);
+  const [cityPickedFromSuggestions, setCityPickedFromSuggestions] = useState(Boolean(couple?.locationCity));
+  const [cityError, setCityError] = useState('');
 
   useEffect(() => {
     if (!ready || editingLocation) return;
     setState(couple?.locationState ?? '');
     setCity(couple?.locationCity ?? '');
+    setCityPickedFromSuggestions(Boolean(couple?.locationCity));
+    setCityError('');
   }, [ready, couple?.locationState, couple?.locationCity, editingLocation]);
 
   useEffect(() => {
@@ -242,7 +246,11 @@ function SettingsContent() {
               <input
                 type="text"
                 value={city}
-                onChange={(e) => setCity(e.target.value)}
+                onChange={(e) => {
+                  setCity(e.target.value);
+                  setCityPickedFromSuggestions(false);
+                  setCityError('');
+                }}
                 placeholder="City (optional)"
                 className={locationFieldClass}
                 style={{ fontFamily: 'var(--font-dm-sans)' }}
@@ -269,6 +277,8 @@ function SettingsContent() {
                         role="option"
                         onClick={() => {
                           setCity(s.city || s.description.split(',')[0] || '');
+                          setCityPickedFromSuggestions(true);
+                          setCityError('');
                           setCityDropdownOpen(false);
                         }}
                         className="w-full cursor-pointer px-4 py-[14px] text-left text-base text-[#2C2420] bg-white hover:bg-[#FAF7F2]"
@@ -280,11 +290,20 @@ function SettingsContent() {
                   )}
                 </div>
               ) : null}
+              {cityError ? (
+                <p className="text-sm text-[#B3261E]" style={{ fontFamily: 'var(--font-dm-sans)' }}>
+                  {cityError}
+                </p>
+              ) : null}
               <button
                 type="button"
                 className="w-full rounded-full bg-[#884E50] py-4 font-medium text-white"
                 style={{ fontFamily: 'var(--font-dm-sans)' }}
                 onClick={async () => {
+                  if (city.trim() && !cityPickedFromSuggestions) {
+                    setCityError('Please select a city from the suggestions');
+                    return;
+                  }
                   await updateLocation(state, city);
                   setEditingLocation(false);
                   setStateDropdownOpen(false);
