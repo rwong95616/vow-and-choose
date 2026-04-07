@@ -108,7 +108,6 @@ export const SwipeCard = forwardRef<SwipeCardHandle, Props>(function SwipeCard(
             <div className="flex min-h-0 items-center gap-1 text-[13px] leading-[19.5px] text-[#6b5f58]">
               <IconPin className="shrink-0 text-[#6B5F58]" />
               <span className="min-w-0 truncate">
-                {option.rating != null && <span className="mr-1 font-medium">⭐ {option.rating.toFixed(1)}</span>}
                 {option.address}
               </span>
             </div>
