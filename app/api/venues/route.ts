@@ -58,7 +58,6 @@ async function textSearchVenues(
   const res = await fetch(url.toString());
   if (!res.ok) return [];
   const data = await res.json();
-  console.log('Places status:', data.status, 'error:', data.error_message);
   if (data.status !== 'OK' || !Array.isArray(data.results)) return [];
   return data.results.slice(0, 12);
 }
