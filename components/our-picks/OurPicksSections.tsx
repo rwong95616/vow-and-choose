@@ -80,7 +80,7 @@ function resolveDisplay(
     if (v) {
       return {
         name: v.title,
-        description: v.description,
+        description: v.description ?? undefined,
         imageUrl: resolveVenueImageUrl(v.imageUrl),
         location: v.address ?? undefined,
       };
@@ -90,7 +90,7 @@ function resolveDisplay(
     if (o) {
       return {
         name: o.title,
-        description: o.description,
+        description: o.description ?? undefined,
         imageUrl: o.imageUrl?.trim() ? o.imageUrl : resolveVenueImageUrl(undefined),
       };
     }

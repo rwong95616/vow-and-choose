@@ -98,12 +98,14 @@ export const SwipeCard = forwardRef<SwipeCardHandle, Props>(function SwipeCard(
           <h3 className="line-clamp-2 font-display text-[22px] font-semibold leading-[28.6px] text-[#2c2420]">
             {option.title}
           </h3>
-          <p
-            className="line-clamp-2 font-sans text-[13px] font-normal leading-[19.5px] text-[#6b5f58]"
-            style={{ fontVariationSettings: "'opsz' 9" }}
-          >
-            {option.description}
-          </p>
+          {option.description != null && option.description.trim() !== '' && (
+            <p
+              className="line-clamp-2 font-sans text-[13px] font-normal leading-[19.5px] text-[#6b5f58]"
+              style={{ fontVariationSettings: "'opsz' 9" }}
+            >
+              {option.description}
+            </p>
+          )}
           {showVenueMeta && (option.address || option.rating != null) && (
             <div className="flex min-h-0 items-center gap-1 text-[13px] leading-[19.5px] text-[#6b5f58]">
               <IconPin className="shrink-0 text-[#6B5F58]" />

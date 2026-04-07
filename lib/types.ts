@@ -2,7 +2,8 @@ export type WeddingOption = {
   id: string;
   category: string;
   title: string;
-  description: string;
+  /** Null when a venue has no editorial summary from Places. */
+  description: string | null;
   /** Fallback when `imageUrl` is absent */
   emoji?: string;
   gradient?: string;

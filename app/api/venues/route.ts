@@ -5,7 +5,8 @@ import { VENUE_IMAGE_PLACEHOLDER } from '@/lib/venueImage';
 import { buildVenueLocationKey } from '@/lib/venueLocationKey';
 import { createServerClient } from '@/lib/supabase';
 
-const CACHE_DAYS = 7;
+/** TODO: restore to 7 after verifying venue description logic with Places. */
+const CACHE_DAYS = 0;
 
 function isGooglePlacesConfigured(): boolean {
   const k = process.env.GOOGLE_PLACES_API_KEY?.trim() ?? '';
@@ -39,6 +40,19 @@ async function fetchPlaceDetails(placeId: string, apiKey: string) {
     photos?: { photo_reference: string }[];
     website?: string;
   };
+}
+
+function venueDescriptionFromPlace(
+  d:
+    | {
+        editorial_summary?: { overview?: string };
+      }
+    | null
+    | undefined
+): string | null {
+  const overview = d?.editorial_summary?.overview?.trim();
+  if (overview) return overview;
+  return null;
 }
 
 async function textSearchVenues(
@@ -115,8 +129,7 @@ export async function GET(req: NextRequest) {
       const placeId = places[i]!.place_id;
       const d = detailsList[i];
       const name = d?.name ?? 'Venue';
-      const desc =
-        d?.editorial_summary?.overview ?? d?.formatted_address ?? 'Wedding venue';
+      const desc = venueDescriptionFromPlace(d);
       const photoRef = d?.photos?.[0]?.photo_reference;
       const imageUrl = photoRef ? photoUrl(photoRef, apiKey) : VENUE_IMAGE_PLACEHOLDER;
 
