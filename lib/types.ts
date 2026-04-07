@@ -8,6 +8,8 @@ export type WeddingOption = {
   emoji?: string;
   gradient?: string;
   imageUrl?: string;
+  /** Google Places photo URLs for swipe carousel (up to 5); first matches `imageUrl` when set. */
+  imageUrls?: string[];
   rating?: number;
   address?: string;
   website?: string | null;

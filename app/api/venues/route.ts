@@ -127,8 +127,12 @@ export async function GET(req: NextRequest) {
       const d = detailsList[i];
       const name = d?.name ?? 'Venue';
       const desc = venueDescriptionFromPlace(d);
-      const photoRef = d?.photos?.[0]?.photo_reference;
-      const imageUrl = photoRef ? photoUrl(photoRef, apiKey) : VENUE_IMAGE_PLACEHOLDER;
+      const photoRefs = (d?.photos ?? []).slice(0, 5).map((ph) => ph.photo_reference);
+      const imageUrls =
+        photoRefs.length > 0
+          ? photoRefs.map((ref) => photoUrl(ref, apiKey))
+          : [VENUE_IMAGE_PLACEHOLDER];
+      const imageUrl = imageUrls[0] ?? VENUE_IMAGE_PLACEHOLDER;
 
       return {
         id: p.place_id,
@@ -138,6 +142,7 @@ export async function GET(req: NextRequest) {
         emoji: '🏛️',
         gradient: '',
         imageUrl,
+        imageUrls,
         rating: d?.rating,
         address: d?.formatted_address,
         website: d?.website ?? null,
