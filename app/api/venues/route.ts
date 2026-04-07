@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getFallbackVenuesForLocation } from '@/data/fallbackVenues';
 import type { WeddingOption } from '@/lib/types';
 import { VENUE_IMAGE_PLACEHOLDER } from '@/lib/venueImage';
+import { buildVenueLocationKey } from '@/lib/venueLocationKey';
 import { createServerClient } from '@/lib/supabase';
 
 const CACHE_DAYS = 7;
@@ -12,14 +13,6 @@ function isGooglePlacesConfigured(): boolean {
   if (/^placeholder$/i.test(k)) return false;
   if (k.length < 20) return false;
   return true;
-}
-
-function buildLocationKey(state: string, city?: string | null): string {
-  const s = state.trim().toLowerCase().replace(/\s+/g, '-');
-  if (city?.trim()) {
-    return `${s}-${city.trim().toLowerCase().replace(/\s+/g, '-')}`;
-  }
-  return s;
 }
 
 function photoUrl(photoReference: string, apiKey: string): string {
@@ -72,7 +65,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'state is required' }, { status: 400 });
   }
 
-  const locationKey = buildLocationKey(state, city);
+  const locationKey = buildVenueLocationKey(state, city);
   const supabase = createServerClient();
 
   const { data: cached } = await supabase

@@ -1,7 +1,7 @@
 'use client';
 
 import { Loader2 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import ItemDetailModal, {
   type ItemDetailModalItem,
 } from '@/components/our-picks/ItemDetailModal';
@@ -12,6 +12,8 @@ import { findStaticOption } from '@/lib/lookupOption';
 import { useCouple } from '@/lib/hooks/useCouple';
 import { usePicks, type SwipeRow } from '@/lib/hooks/usePicks';
 import { useVenues } from '@/lib/hooks/useVenues';
+import { createBrowserClient } from '@/lib/supabase';
+import { buildVenueLocationKey } from '@/lib/venueLocationKey';
 import { resolveVenueImageUrl } from '@/lib/venueImage';
 import type { WeddingOption } from '@/lib/types';
 
@@ -52,10 +54,21 @@ function aggregateYesSwipes(swipes: SwipeRow[]): AggregatedPick[] {
   return out;
 }
 
+/** Merge cache + live API list; later entries win (API over cache). */
+function mergeVenueOptions(
+  cacheRows: WeddingOption[],
+  apiRows: WeddingOption[]
+): Map<string, WeddingOption> {
+  const m = new Map<string, WeddingOption>();
+  for (const v of cacheRows) m.set(v.id, v);
+  for (const v of apiRows) m.set(v.id, v);
+  return m;
+}
+
 function resolveDisplay(
   category: string,
   itemId: string,
-  venues: WeddingOption[]
+  venueById: Map<string, WeddingOption>
 ): {
   name: string;
   description?: string;
@@ -63,7 +76,7 @@ function resolveDisplay(
   location?: string;
 } {
   if (category === 'venue') {
-    const v = venues.find((o) => o.id === itemId);
+    const v = venueById.get(itemId);
     if (v) {
       return {
         name: v.title,
@@ -108,9 +121,55 @@ export function OurPicksSections() {
   const { swipes, loading: picksLoading } = usePicks(coupleId);
   const { venues, loading: venuesLoading } = useVenues(couple?.locationState, couple?.locationCity);
 
+  const [cacheVenues, setCacheVenues] = useState<WeddingOption[]>([]);
+  const [cacheLoaded, setCacheLoaded] = useState(true);
+
+  useEffect(() => {
+    if (!couple?.locationState?.trim() || couple.locationCity === undefined) {
+      setCacheVenues([]);
+      setCacheLoaded(true);
+      return;
+    }
+    setCacheLoaded(false);
+    const supabase = createBrowserClient();
+    const key = buildVenueLocationKey(couple.locationState, couple.locationCity);
+    void supabase
+      .from('venue_cache')
+      .select('results')
+      .eq('location_key', key)
+      .maybeSingle()
+      .then(({ data, error }) => {
+        if (error) {
+          setCacheVenues([]);
+        } else {
+          const rows = Array.isArray(data?.results) ? (data.results as WeddingOption[]) : [];
+          setCacheVenues(rows);
+        }
+        setCacheLoaded(true);
+      });
+  }, [couple?.locationState, couple?.locationCity]);
+
   const [selectedItem, setSelectedItem] = useState<ItemDetailModalItem | null>(null);
 
-  const aggregated = useMemo(() => aggregateYesSwipes(swipes), [swipes]);
+  const venueById = useMemo(
+    () => mergeVenueOptions(cacheVenues, venues),
+    [cacheVenues, venues]
+  );
+
+  const rawAggregated = useMemo(() => aggregateYesSwipes(swipes), [swipes]);
+
+  const hasVenueYesSwipes = useMemo(
+    () => rawAggregated.some((p) => p.category === 'venue'),
+    [rawAggregated]
+  );
+
+  /** Only show venue picks whose place_id exists in this couple's location catalog (API + venue_cache). */
+  const aggregated = useMemo(() => {
+    return rawAggregated.filter((p) => {
+      if (p.category !== 'venue') return true;
+      return venueById.has(p.item_id);
+    });
+  }, [rawAggregated, venueById]);
 
   const needsVenueResolution = useMemo(
     () => aggregated.some((p) => p.category === 'venue'),
@@ -118,7 +177,9 @@ export function OurPicksSections() {
   );
 
   const loading =
-    !ready || picksLoading || (needsVenueResolution && venuesLoading);
+    !ready ||
+    picksLoading ||
+    (hasVenueYesSwipes && (venuesLoading || !cacheLoaded));
 
   const byCategory = useMemo(() => {
     const map = new Map<string, AggregatedPick[]>();
@@ -129,13 +190,13 @@ export function OurPicksSections() {
     }
     for (const [, list] of map) {
       list.sort((a, b) =>
-        resolveDisplay(a.category, a.item_id, venues).name.localeCompare(
-          resolveDisplay(b.category, b.item_id, venues).name
+        resolveDisplay(a.category, a.item_id, venueById).name.localeCompare(
+          resolveDisplay(b.category, b.item_id, venueById).name
         )
       );
     }
     return map;
-  }, [aggregated, venues]);
+  }, [aggregated, venueById]);
 
   const orderedCategories = useMemo(() => {
     const keys = new Set(byCategory.keys());
@@ -174,7 +235,7 @@ export function OurPicksSections() {
               </h2>
               <div className="flex flex-col gap-3">
                 {picks.map((p) => {
-                  const meta = resolveDisplay(p.category, p.item_id, venues);
+                  const meta = resolveDisplay(p.category, p.item_id, venueById);
 
                   return (
                     <PickCard
