@@ -80,14 +80,14 @@ function SettingsContent() {
   const [citySuggestions, setCitySuggestions] = useState<CitySuggestion[]>([]);
   const [cityDropdownOpen, setCityDropdownOpen] = useState(false);
   const [cityLoading, setCityLoading] = useState(false);
-  const [cityPickedFromSuggestions, setCityPickedFromSuggestions] = useState(Boolean(couple?.locationCity));
+  const [citySelectedFromDropdown, setCitySelectedFromDropdown] = useState(Boolean(couple?.locationCity));
   const [cityError, setCityError] = useState('');
 
   useEffect(() => {
     if (!ready || editingLocation) return;
     setState(couple?.locationState ?? '');
     setCity(couple?.locationCity ?? '');
-    setCityPickedFromSuggestions(Boolean(couple?.locationCity));
+    setCitySelectedFromDropdown(Boolean(couple?.locationCity));
     setCityError('');
   }, [ready, couple?.locationState, couple?.locationCity, editingLocation]);
 
@@ -96,6 +96,11 @@ function SettingsContent() {
       setCitySuggestions([]);
       setCityDropdownOpen(false);
       setCityLoading(false);
+      return;
+    }
+
+    if (citySelectedFromDropdown) {
+      setCityDropdownOpen(false);
       return;
     }
 
@@ -133,7 +138,7 @@ function SettingsContent() {
       clearTimeout(timer);
       controller.abort();
     };
-  }, [city, editingLocation]);
+  }, [city, editingLocation, state, citySelectedFromDropdown]);
 
   const locationFieldClass =
     'w-full rounded-[12px] border border-[#D3D1C7] py-[14px] px-[16px] text-[#2C2420] outline-none';
@@ -230,6 +235,7 @@ function SettingsContent() {
                         onClick={() => {
                           setState(s);
                           setCity('');
+                          setCitySelectedFromDropdown(false);
                           setStateDropdownOpen(false);
                         }}
                         className={`w-full cursor-pointer px-4 py-[14px] text-left text-base text-[#2C2420] ${
@@ -248,17 +254,17 @@ function SettingsContent() {
                 value={city}
                 onChange={(e) => {
                   setCity(e.target.value);
-                  setCityPickedFromSuggestions(false);
+                  setCitySelectedFromDropdown(false);
                   setCityError('');
                 }}
                 placeholder="City (optional)"
                 className={locationFieldClass}
                 style={{ fontFamily: 'var(--font-dm-sans)' }}
                 onFocus={() => {
-                  if (citySuggestions.length > 0) setCityDropdownOpen(true);
+                  if (citySuggestions.length > 0 && !citySelectedFromDropdown) setCityDropdownOpen(true);
                 }}
               />
-              {cityDropdownOpen ? (
+              {cityDropdownOpen && citySuggestions.length > 0 && !citySelectedFromDropdown ? (
                 <div
                   className="mt-1 max-h-[240px] overflow-y-auto rounded-[14px] border-[0.5px] border-solid border-[#D4CEC8] bg-white shadow-[0_8px_24px_0_rgba(44,36,32,0.12)]"
                   role="listbox"
@@ -277,8 +283,9 @@ function SettingsContent() {
                         role="option"
                         onClick={() => {
                           setCity(s.city || s.description.split(',')[0] || '');
-                          setCityPickedFromSuggestions(true);
+                          setCitySelectedFromDropdown(true);
                           setCityError('');
+                          setCitySuggestions([]);
                           setCityDropdownOpen(false);
                         }}
                         className="w-full cursor-pointer px-4 py-[14px] text-left text-base text-[#2C2420] bg-white hover:bg-[#FAF7F2]"
@@ -300,7 +307,7 @@ function SettingsContent() {
                 className="w-full rounded-full bg-[#884E50] py-4 font-medium text-white"
                 style={{ fontFamily: 'var(--font-dm-sans)' }}
                 onClick={async () => {
-                  if (city.trim() && !cityPickedFromSuggestions) {
+                  if (city.trim() && !citySelectedFromDropdown) {
                     setCityError('Please select a city from the suggestions');
                     return;
                   }
