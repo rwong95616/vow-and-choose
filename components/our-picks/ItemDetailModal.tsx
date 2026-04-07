@@ -8,6 +8,8 @@ export type ItemDetailModalItem = {
   category: string;
   location?: string;
   description?: string;
+  /** Color-theme palette dots (same styling as PickCard). */
+  swatchColors?: string[];
   badge: 'our-pick' | 'bride' | 'groom' | 'both';
   imageUrl: string;
 };
@@ -120,6 +122,17 @@ export function ItemDetailModal({ isOpen, onClose, item }: ItemDetailModalProps)
                 >
                   {item.description}
                 </p>
+              )}
+              {item.swatchColors && item.swatchColors.length > 0 && (
+                <div className="flex min-h-0 min-w-0 flex-row items-center gap-2 overflow-hidden">
+                  {item.swatchColors.map((color, i) => (
+                    <span
+                      key={`swatch-${i}`}
+                      className="h-6 w-6 shrink-0 rounded-full shadow-[0_1px_3px_0_rgba(44,36,32,0.08)]"
+                      style={{ backgroundColor: color }}
+                    />
+                  ))}
+                </div>
               )}
               {item.location ? (
                 <div className="flex items-center gap-1 text-sm text-[#6B5F58]">

@@ -13,6 +13,7 @@ import { useCouple } from '@/lib/hooks/useCouple';
 import { usePicks, type SwipeRow } from '@/lib/hooks/usePicks';
 import { useVenues } from '@/lib/hooks/useVenues';
 import { createBrowserClient } from '@/lib/supabase';
+import { getColorThemeSwatches } from '@/lib/colorThemeSwatches';
 import { buildVenueLocationKey } from '@/lib/venueLocationKey';
 import { resolveVenueImageUrl } from '@/lib/venueImage';
 import type { WeddingOption } from '@/lib/types';
@@ -242,7 +243,16 @@ export function OurPicksSections() {
                       key={`${p.category}-${p.item_id}`}
                       name={meta.name}
                       location={meta.location}
-                      description={meta.description}
+                      description={
+                        p.category === 'venue' || p.category === 'color-theme'
+                          ? undefined
+                          : meta.description
+                      }
+                      swatchColors={
+                        p.category === 'color-theme'
+                          ? getColorThemeSwatches(p.item_id)
+                          : undefined
+                      }
                       badge={p.badge}
                       imageUrl={meta.imageUrl}
                       onClick={() =>
@@ -251,6 +261,10 @@ export function OurPicksSections() {
                           category: modalCategoryLabel(p.category),
                           location: meta.location,
                           description: meta.description,
+                          swatchColors:
+                            p.category === 'color-theme'
+                              ? getColorThemeSwatches(p.item_id)
+                              : undefined,
                           badge: p.badge,
                           imageUrl: meta.imageUrl,
                         })

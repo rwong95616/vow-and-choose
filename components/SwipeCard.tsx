@@ -8,6 +8,7 @@ import {
   SWIPE_CAPTION_STRIP_CLASS,
   SWIPE_PHOTO_STRIP_CLASS,
 } from '@/lib/swipeCardLayout';
+import { COLOR_THEME_SWATCHES } from '@/lib/colorThemeSwatches';
 import type { WeddingOption } from '@/lib/types';
 
 function IconPin({ className }: { className?: string }) {
@@ -105,6 +106,17 @@ export const SwipeCard = forwardRef<SwipeCardHandle, Props>(function SwipeCard(
             >
               {option.description}
             </p>
+          )}
+          {option.category === 'color-theme' && COLOR_THEME_SWATCHES[option.id] && (
+            <div className="flex min-h-0 min-w-0 flex-row items-center gap-2 overflow-hidden">
+              {COLOR_THEME_SWATCHES[option.id].map((color, i) => (
+                <span
+                  key={`${option.id}-swatch-${i}`}
+                  className="h-6 w-6 shrink-0 rounded-full shadow-[0_1px_3px_0_rgba(44,36,32,0.08)]"
+                  style={{ backgroundColor: color }}
+                />
+              ))}
+            </div>
           )}
           {showVenueMeta && (option.address || option.rating != null) && (
             <div className="flex min-h-0 items-center gap-1 text-[13px] leading-[19.5px] text-[#6b5f58]">
