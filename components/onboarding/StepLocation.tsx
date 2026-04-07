@@ -115,20 +115,76 @@ type Props = {
   onSkip?: () => void;
 };
 
+type CitySuggestion = {
+  placeId: string;
+  description: string;
+  city: string;
+};
+
 export function StepLocation({ coupleId, onDone, onSkip }: Props) {
   const supabase = createBrowserClient();
   const [state, setState] = useState('');
   const [city, setCity] = useState('');
+  const [citySuggestions, setCitySuggestions] = useState<CitySuggestion[]>([]);
+  const [cityDropdownOpen, setCityDropdownOpen] = useState(false);
+  const [cityLoading, setCityLoading] = useState(false);
+  const [citySelectedFromDropdown, setCitySelectedFromDropdown] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const hasState = state.trim().length > 0;
   const submitDisabled = !hasState || busy;
 
+  useEffect(() => {
+    if (citySelectedFromDropdown) {
+      setCityDropdownOpen(false);
+      return;
+    }
+
+    const q = city.trim();
+    if (!q || !state.trim()) {
+      setCitySuggestions([]);
+      setCityDropdownOpen(false);
+      setCityLoading(false);
+      return;
+    }
+
+    const controller = new AbortController();
+    const timer = setTimeout(async () => {
+      setCityLoading(true);
+      try {
+        const params = new URLSearchParams({ input: q, state: state.trim() });
+        const res = await fetch(`/api/places/cities?${params.toString()}`, {
+          signal: controller.signal,
+        });
+        const data = (await res.json().catch(() => ({}))) as {
+          predictions?: CitySuggestion[];
+        };
+        const predictions = Array.isArray(data.predictions) ? data.predictions : [];
+        setCitySuggestions(predictions);
+        setCityDropdownOpen(predictions.length > 0);
+      } catch {
+        setCitySuggestions([]);
+        setCityDropdownOpen(false);
+      } finally {
+        setCityLoading(false);
+      }
+    }, 200);
+
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [city, state, citySelectedFromDropdown]);
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!state.trim()) {
       setError('Choose a state');
+      return;
+    }
+    if (city.trim() && !citySelectedFromDropdown) {
+      setError('Please select a city from the suggestions');
       return;
     }
     setError(null);
@@ -167,16 +223,61 @@ export function StepLocation({ coupleId, onDone, onSkip }: Props) {
       </div>
 
       <div className="flex flex-col gap-2.5">
-        <StateSelect id="location-state" value={state} onChange={setState} />
+        <StateSelect
+          id="location-state"
+          value={state}
+          onChange={(next) => {
+            setState(next);
+            setCity('');
+            setCitySelectedFromDropdown(false);
+            setCitySuggestions([]);
+            setCityDropdownOpen(false);
+          }}
+        />
 
         <input
           id="city"
           value={city}
-          onChange={(e) => setCity(e.target.value)}
+          onChange={(e) => {
+            setCity(e.target.value);
+            setCitySelectedFromDropdown(false);
+            setError(null);
+          }}
           placeholder="City (optional)"
           autoComplete="address-level2"
           className={cityFieldClass}
+          onFocus={() => {
+            if (citySuggestions.length > 0 && !citySelectedFromDropdown) setCityDropdownOpen(true);
+          }}
         />
+        {cityDropdownOpen && citySuggestions.length > 0 && !citySelectedFromDropdown ? (
+          <div
+            className="max-h-[240px] overflow-y-auto rounded-[14px] border border-[#D1C8B8] bg-white py-1 shadow-ds-medium"
+            role="listbox"
+          >
+            {cityLoading ? (
+              <div className="px-4 py-3.5 text-left font-sans text-[15px] text-[#8E8E8E]">Loading cities...</div>
+            ) : (
+              citySuggestions.map((s) => (
+                <button
+                  key={s.placeId}
+                  type="button"
+                  role="option"
+                  onClick={() => {
+                    setCity(s.city || s.description.split(',')[0] || '');
+                    setCitySelectedFromDropdown(true);
+                    setError(null);
+                    setCitySuggestions([]);
+                    setCityDropdownOpen(false);
+                  }}
+                  className="w-full px-4 py-3.5 text-left font-sans text-[15px] text-[#2D2926] transition hover:bg-[#F9F7F5] active:bg-[#F3F1EE]"
+                >
+                  {s.city}
+                </button>
+              ))
+            )}
+          </div>
+        ) : null}
       </div>
 
       {error && (
