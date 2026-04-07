@@ -39,7 +39,8 @@ export function useVenues(
       const data = (await res.json().catch(() => ({}))) as VenuesResponse & { error?: string };
 
       let list: WeddingOption[] = Array.isArray(data.venues) ? data.venues : [];
-      if (list.length === 0) {
+      const keepEmpty = res.ok && data.fallback === false;
+      if (list.length === 0 && !keepEmpty) {
         list = getFallbackVenuesForLocation(effectiveState, city ?? null);
       }
 

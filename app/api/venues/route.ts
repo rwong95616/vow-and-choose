@@ -146,11 +146,9 @@ export async function GET(req: NextRequest) {
 
     if (venues.length === 0) {
       return NextResponse.json({
-        venues: sampleVenues(),
+        venues: [],
         cached: false,
-        fallback: true,
-        message:
-          'Showing sample venues for your area — check your Google Places API key or billing.',
+        fallback: false,
       });
     }
 

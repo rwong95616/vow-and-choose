@@ -89,6 +89,17 @@ export function HomeClient() {
 
   const deckLoading = category === 'venue' ? venuesLoading : false;
 
+  const venueLocationLabel = (() => {
+    const c = city?.trim();
+    const s = state?.trim();
+    if (c && s) return `${c}, ${s}`;
+    if (s) return s;
+    return 'this area';
+  })();
+
+  const showVenueEmpty =
+    category === 'venue' && !deckLoading && venues.length === 0;
+
   return (
     <AppShell variant="swipe">
       <div className="flex h-full min-h-0 flex-1 flex-col gap-5 pt-[60px]">
@@ -100,6 +111,26 @@ export function HomeClient() {
           {deckLoading ? (
             <div className="flex flex-1 items-center justify-center px-8 py-8 text-center font-sans text-[13px] leading-[19.5px] text-[#6b5f58]">
               Finding venues near you…
+            </div>
+          ) : showVenueEmpty ? (
+            <div className="flex flex-1 flex-col items-center justify-center gap-4 px-8 py-8 text-center">
+              <span className="text-5xl leading-none" aria-hidden>
+                💒
+              </span>
+              <h2 className="font-display text-heading-sm text-ink">
+                No venues found in {venueLocationLabel}
+              </h2>
+              <p className="max-w-[280px] font-sans text-body-sm leading-[19.5px] text-muted">
+                We couldn&apos;t find wedding venues in this area yet. Try a nearby city or browse by
+                state.
+              </p>
+              <button
+                type="button"
+                onClick={() => router.push('/settings')}
+                className="mt-1 w-full max-w-[240px] rounded-full bg-primary py-3.5 font-sans font-medium text-white"
+              >
+                Change Location
+              </button>
             </div>
           ) : (
             <CardDeck
