@@ -2,8 +2,8 @@
 export function EmptyState() {
   return (
     <p
-      className="font-[family-name:var(--font-playfair)] italic text-[20px] leading-normal text-[#B8B0A8]"
-      style={{ paddingTop: '8px' }}
+      className="text-base text-[#6B5F58]"
+      style={{ fontFamily: 'var(--font-dm-sans)', paddingTop: '8px' }}
     >
       Start swiping to see your picks here
     </p>
