@@ -19,6 +19,8 @@ export function useVenues(state: string | undefined, city?: string | null) {
   const [error, setError] = useState<string | null>(null);
   const fetchVenues = useCallback(async () => {
     const effectiveState = state?.trim() || DEFAULT_STATE_FOR_FETCH;
+    // Wait until couple data is ready before fetching
+    if (city === undefined) return;
     setLoading(true);
     setError(null);
     try {

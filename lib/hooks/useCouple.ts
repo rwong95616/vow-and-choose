@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { CoupleStorage, UserRole } from '@/lib/types';
 import { loadCouple, saveCouplePartial } from '@/lib/storage';
+import { createBrowserClient } from '@/lib/supabase';
 
 export function useCouple() {
   const [couple, setCouple] = useState<CoupleStorage | null>(null);
@@ -18,8 +19,19 @@ export function useCouple() {
     setCouple(loadCouple());
   }, []);
 
-  const updateLocation = useCallback((locationState: string, locationCity?: string) => {
+  const updateLocation = useCallback(async (locationState: string, locationCity?: string) => {
     saveCouplePartial({ locationState, locationCity });
+    const { coupleId } = loadCouple() ?? {};
+    if (coupleId) {
+      const supabase = createBrowserClient();
+      await supabase
+        .from('couples')
+        .update({
+          location_state: locationState,
+          location_city: locationCity,
+        })
+        .eq('id', coupleId);
+    }
     setCouple(loadCouple());
   }, []);
 
