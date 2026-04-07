@@ -24,14 +24,14 @@ const BADGE_LABEL: Record<ItemDetailModalItem['badge'], string> = {
   'our-pick': 'Our Pick',
   bride: 'Bride',
   groom: 'Groom',
-  both: 'Both',
+  both: 'Our Pick',
 };
 
 const BADGE_SURFACE: Record<ItemDetailModalItem['badge'], string> = {
-  'our-pick': 'bg-[#C4A96B]',
+  'our-pick': 'bg-[#B5973A]',
   bride: 'bg-[#E8857A]',
   groom: 'bg-[#6B8F71]',
-  both: 'bg-[#8B7355]',
+  both: 'bg-[#C4A96B]',
 };
 
 const sheetTransition = {

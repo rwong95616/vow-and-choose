@@ -19,7 +19,7 @@ const BADGE_LABEL: Record<PickCardProps['badge'], string> = {
   'our-pick': 'Our Pick',
   bride: 'Bride',
   groom: 'Groom',
-  both: 'Both',
+  both: 'Our Pick',
 };
 
 const BADGE_SURFACE: Record<PickCardProps['badge'], string> = {
