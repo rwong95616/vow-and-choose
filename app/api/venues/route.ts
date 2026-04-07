@@ -5,8 +5,7 @@ import { VENUE_IMAGE_PLACEHOLDER } from '@/lib/venueImage';
 import { buildVenueLocationKey } from '@/lib/venueLocationKey';
 import { createServerClient } from '@/lib/supabase';
 
-/** TODO: restore to 7 after verifying venue description logic with Places. */
-const CACHE_DAYS = 0;
+const CACHE_DAYS = 7;
 
 function isGooglePlacesConfigured(): boolean {
   const k = process.env.GOOGLE_PLACES_API_KEY?.trim() ?? '';
@@ -53,6 +52,53 @@ function venueDescriptionFromPlace(
   const overview = d?.editorial_summary?.overview?.trim();
   if (overview) return overview;
   return null;
+}
+
+/** Remove leading list/header markers models sometimes emit despite instructions. */
+function stripLeadingMarkdownFromGeneratedDescription(text: string): string {
+  let t = text.trim();
+  t = t.replace(/^[\s#*\-]+/, '');
+  return t.trim();
+}
+
+async function generateVenueDescriptionAnthropic(
+  venueName: string,
+  addressLine: string
+): Promise<string | null> {
+  const apiKey = process.env.ANTHROPIC_API_KEY?.trim();
+  if (!apiKey) return null;
+
+  const userPrompt = `Write a 2-sentence evocative description for a wedding venue called '${venueName.replace(/'/g, "\\'")}' located at '${addressLine.replace(/'/g, "\\'")}'. Focus on atmosphere and romance. No quotes, just the description.`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 100,
+        messages: [{ role: 'user', content: userPrompt }],
+      }),
+    });
+
+    if (!res.ok) return null;
+    const data = (await res.json()) as {
+      content?: Array<{ type?: string; text?: string }>;
+    };
+    const raw = (data.content ?? [])
+      .filter((b) => b.type === 'text' && b.text)
+      .map((b) => b.text as string)
+      .join('')
+      .trim();
+    const text = raw ? stripLeadingMarkdownFromGeneratedDescription(raw) : '';
+    return text || null;
+  } catch {
+    return null;
+  }
 }
 
 async function textSearchVenues(
@@ -124,28 +170,36 @@ export async function GET(req: NextRequest) {
       places.map((p) => fetchPlaceDetails(p.place_id, apiKey))
     );
 
-    const venues: WeddingOption[] = [];
-    for (let i = 0; i < places.length; i++) {
-      const placeId = places[i]!.place_id;
-      const d = detailsList[i];
-      const name = d?.name ?? 'Venue';
-      const desc = venueDescriptionFromPlace(d);
-      const photoRef = d?.photos?.[0]?.photo_reference;
-      const imageUrl = photoRef ? photoUrl(photoRef, apiKey) : VENUE_IMAGE_PLACEHOLDER;
+    const venues: WeddingOption[] = await Promise.all(
+      places.map(async (p, i) => {
+        const d = detailsList[i];
+        const name = d?.name ?? 'Venue';
+        let desc = venueDescriptionFromPlace(d);
+        if (desc == null) {
+          const addressLine =
+            d?.formatted_address?.trim() ||
+            [city, state].filter((s): s is string => Boolean(s?.trim())).join(', ') ||
+            'the area';
+          const generated = await generateVenueDescriptionAnthropic(name, addressLine);
+          if (generated) desc = generated;
+        }
+        const photoRef = d?.photos?.[0]?.photo_reference;
+        const imageUrl = photoRef ? photoUrl(photoRef, apiKey) : VENUE_IMAGE_PLACEHOLDER;
 
-      venues.push({
-        id: placeId,
-        category: 'venue',
-        title: name,
-        description: desc,
-        emoji: '🏛️',
-        gradient: '',
-        imageUrl,
-        rating: d?.rating,
-        address: d?.formatted_address,
-        website: d?.website ?? null,
-      });
-    }
+        return {
+          id: p.place_id,
+          category: 'venue',
+          title: name,
+          description: desc,
+          emoji: '🏛️',
+          gradient: '',
+          imageUrl,
+          rating: d?.rating,
+          address: d?.formatted_address,
+          website: d?.website ?? null,
+        };
+      })
+    );
 
     if (venues.length === 0) {
       return NextResponse.json({
