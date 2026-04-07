@@ -49,7 +49,7 @@ export function HomeClient() {
   const state = couple?.locationState;
   const city = couple?.locationCity;
 
-  const { venues, loading: venuesLoading } = useVenues(state, city);
+  const { venues, loading: venuesLoading } = useVenues(state, city, { enabled: ready });
 
   const userRole = couple?.userRole ?? 'bride';
   const { decisions, persistSwipe, applyLocalSwipe, resetCategory } = useSwipes(

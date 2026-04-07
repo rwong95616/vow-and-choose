@@ -13,14 +13,23 @@ type VenuesResponse = {
 /** When no onboarding location is stored yet, still call `/api/venues` so sample/fallback data loads (no Places key). */
 const DEFAULT_STATE_FOR_FETCH = 'California';
 
-export function useVenues(state: string | undefined, city?: string | null) {
+type UseVenuesOptions = {
+  /** When false, skips fetch (e.g. before `useCouple` has hydrated). City is optional — do not gate on it. */
+  enabled?: boolean;
+};
+
+export function useVenues(
+  state: string | undefined,
+  city?: string | null,
+  options?: UseVenuesOptions
+) {
+  const enabled = options?.enabled ?? true;
   const [venues, setVenues] = useState<WeddingOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const fetchVenues = useCallback(async () => {
+    if (!enabled) return;
     const effectiveState = state?.trim() || DEFAULT_STATE_FOR_FETCH;
-    // Wait until couple data is ready before fetching
-    if (city === undefined) return;
     setLoading(true);
     setError(null);
     try {
@@ -46,11 +55,12 @@ export function useVenues(state: string | undefined, city?: string | null) {
     } finally {
       setLoading(false);
     }
-  }, [state, city]);
+  }, [state, city, enabled]);
 
   useEffect(() => {
-    fetchVenues();
-  }, [fetchVenues]);
+    if (!enabled) return;
+    void fetchVenues();
+  }, [fetchVenues, enabled]);
 
   return {
     venues,

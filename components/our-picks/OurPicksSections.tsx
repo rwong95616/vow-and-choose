@@ -120,7 +120,9 @@ export function OurPicksSections() {
   const { couple, ready } = useCouple();
   const coupleId = couple?.coupleId;
   const { swipes, loading: picksLoading } = usePicks(coupleId);
-  const { venues, loading: venuesLoading } = useVenues(couple?.locationState, couple?.locationCity);
+  const { venues, loading: venuesLoading } = useVenues(couple?.locationState, couple?.locationCity, {
+    enabled: ready,
+  });
 
   const [cacheVenues, setCacheVenues] = useState<WeddingOption[]>([]);
   const [cacheLoaded, setCacheLoaded] = useState(true);
