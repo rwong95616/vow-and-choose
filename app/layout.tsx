@@ -28,7 +28,7 @@ export const metadata: Metadata = {
       'Swipe, match, and build your dream wedding as a couple with Vow & Choose.',
     images: [
       {
-        url: '/images/blush-champagne-color-theme.jpg',
+        url: '/images/og-image.jpg',
         width: 1200,
         height: 800,
         alt: 'Blush & Champagne wedding color theme',
