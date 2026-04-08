@@ -23,7 +23,7 @@ export const metadata: Metadata = {
   description:
     'Swipe, match, and build your dream wedding as a couple with Vow & Choose.',
   openGraph: {
-    title: 'Vow and Choose',
+    title: 'Vow & Choose',
     description:
       'Swipe, match, and build your dream wedding as a couple with Vow & Choose.',
     images: [
