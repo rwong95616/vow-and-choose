@@ -21,11 +21,11 @@ export const metadata: Metadata = {
   ),
   title: 'Vow & Choose',
   description:
-    'Swipe on wedding venues together and build your dream list as a couple. Find your perfect wedding venue with Vow & Choose.',
+    'Swipe, match, and build your dream wedding as a couple with Vow & Choose.',
   openGraph: {
     title: 'Vow and Choose',
     description:
-      'Swipe on wedding venues together and build your dream list as a couple. Find your perfect wedding venue with Vow & Choose.',
+      'Swipe, match, and build your dream wedding as a couple with Vow & Choose.',
     images: [
       {
         url: '/images/blush-champagne-color-theme.jpg',
