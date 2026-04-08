@@ -1,7 +1,8 @@
 'use client';
 
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { Images, X } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { useEffect, useState } from 'react';
 import { VENUE_IMAGE_PLACEHOLDER, resolveVenueImageUrl } from '@/lib/venueImage';
 import { SWIPE_PHOTO_IMG_CLASS } from '@/lib/swipeCardLayout';
 import type { WeddingOption } from '@/lib/types';
@@ -20,143 +21,88 @@ export function isVenueHeroOption(option: WeddingOption): boolean {
   return false;
 }
 
-function VenuePhotoCarousel({
+function VenuePhotoGalleryModal({
   urls,
-  photoKey,
+  onClose,
 }: {
   urls: string[];
-  photoKey: string;
+  onClose: () => void;
 }) {
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const [index, setIndex] = useState(0);
   const [bad, setBad] = useState<Record<number, boolean>>({});
 
   useEffect(() => {
-    setIndex(0);
-    setBad({});
-    const el = scrollRef.current;
-    if (el) el.scrollTo({ left: 0 });
-  }, [photoKey]);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, []);
 
-  const n = urls.length;
-  const scrollToIndex = useCallback(
-    (i: number) => {
-      const el = scrollRef.current;
-      if (!el) return;
-      const w = el.clientWidth;
-      if (w <= 0) return;
-      const next = Math.max(0, Math.min(n - 1, i));
-      el.scrollTo({ left: next * w, behavior: 'smooth' });
-    },
-    [n]
-  );
-
-  const onScroll = useCallback(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    const w = el.clientWidth;
-    if (w <= 0) return;
-    const i = Math.min(n - 1, Math.round(el.scrollLeft / w));
-    setIndex(i);
-  }, [n]);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
 
   return (
-    <div className="relative h-full min-h-0 w-full">
+    <>
+      <button
+        type="button"
+        aria-label="Close"
+        className="fixed inset-0 z-50 bg-black/50"
+        onClick={onClose}
+      />
       <div
-        ref={scrollRef}
-        role="region"
+        role="dialog"
+        aria-modal="true"
         aria-label="Venue photos"
-        onScroll={onScroll}
-        className="no-scrollbar flex h-full w-full snap-x snap-mandatory overflow-x-auto overflow-y-hidden"
-        style={{
-          touchAction: 'pan-x',
-          WebkitOverflowScrolling: 'touch',
-        }}
+        className="fixed bottom-0 left-0 right-0 z-50 flex h-[70vh] flex-col overflow-hidden rounded-t-[28px] bg-white"
       >
-        {urls.map((url, i) => (
-          <div
-            key={`${photoKey}-${i}`}
-            className="relative h-full w-full shrink-0 snap-start snap-always"
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={bad[i] ? VENUE_IMAGE_PLACEHOLDER : url}
-              alt=""
-              width={800}
-              height={600}
-              className={SWIPE_PHOTO_IMG_CLASS}
-              draggable={false}
-              onError={() =>
-                setBad((prev) => (prev[i] ? prev : { ...prev, [i]: true }))
-              }
-            />
-          </div>
-        ))}
-      </div>
-
-      <button
-        type="button"
-        aria-label="Previous photo"
-        disabled={index === 0}
-        className={`absolute left-2 top-1/2 z-[3] flex size-8 -translate-y-1/2 items-center justify-center rounded-full border-0 bg-white/55 text-[#2C2420] shadow-[0_1px_3px_rgba(44,36,32,0.12)] backdrop-blur-[1px] transition-opacity ${
-          index === 0 ? 'pointer-events-none opacity-0' : 'opacity-100'
-        }`}
-        onPointerDown={(e) => e.stopPropagation()}
-        onClick={(e) => {
-          e.stopPropagation();
-          scrollToIndex(index - 1);
-        }}
-      >
-        <ChevronLeft className="size-4 shrink-0" strokeWidth={2} aria-hidden />
-      </button>
-      <button
-        type="button"
-        aria-label="Next photo"
-        disabled={index >= n - 1}
-        className={`absolute right-2 top-1/2 z-[3] flex size-8 -translate-y-1/2 items-center justify-center rounded-full border-0 bg-white/55 text-[#2C2420] shadow-[0_1px_3px_rgba(44,36,32,0.12)] backdrop-blur-[1px] transition-opacity ${
-          index >= n - 1 ? 'pointer-events-none opacity-0' : 'opacity-100'
-        }`}
-        onPointerDown={(e) => e.stopPropagation()}
-        onClick={(e) => {
-          e.stopPropagation();
-          scrollToIndex(index + 1);
-        }}
-      >
-        <ChevronRight className="size-4 shrink-0" strokeWidth={2} aria-hidden />
-      </button>
-
-      <div
-        className="absolute bottom-3 left-0 right-0 z-[4] flex items-center justify-center"
-        style={{ gap: '6px' }}
-        role="tablist"
-        aria-label="Photo position"
-      >
-        {urls.map((_, i) => (
+        <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
           <button
-            key={i}
             type="button"
-            role="tab"
-            aria-selected={i === index}
-            aria-label={`Photo ${i + 1} of ${urls.length}`}
-            className="inline-flex border-0 bg-transparent p-0"
+            aria-label="Close"
+            className="absolute right-4 top-4 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-white text-[#2C2420]"
             onClick={(e) => {
               e.stopPropagation();
-              scrollToIndex(i);
+              onClose();
             }}
           >
-            <span
-              className="block rounded-[100px]"
-              style={{
-                width: i === index ? '20px' : '6px',
-                height: '6px',
-                backgroundColor: i === index ? '#884e50' : '#D1C9C4',
-                transition: 'all 0.3s',
-              }}
-            />
+            <X size={20} strokeWidth={1.5} aria-hidden />
           </button>
-        ))}
+          <div className="min-h-0 w-full flex-1 overflow-y-auto overflow-x-hidden">
+            <div className="flex flex-col gap-2 pb-[max(1.25rem,env(safe-area-inset-bottom,0px))]">
+              {urls.map((url, i) => (
+                <div key={i} className="w-full shrink-0">
+                  <div
+                    className={`w-full overflow-hidden ${i === 0 ? 'rounded-t-[28px]' : ''}`}
+                    style={{ height: '320px', flexShrink: 0 }}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={bad[i] ? VENUE_IMAGE_PLACEHOLDER : url}
+                      alt=""
+                      style={{
+                        width: '100%',
+                        height: '320px',
+                        objectFit: 'cover',
+                        display: 'block',
+                      }}
+                      draggable={false}
+                      onError={() =>
+                        setBad((prev) => (prev[i] ? prev : { ...prev, [i]: true }))
+                      }
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 
@@ -167,6 +113,12 @@ export function VenueHeroImage({ option, emojiSizeClass = 'text-[80px]' }: Props
   const [src, setSrc] = useState(() =>
     venue ? resolveVenueImageUrl(option.imageUrl) : directImageUrl
   );
+  const [galleryOpen, setGalleryOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (venue) {
@@ -175,6 +127,13 @@ export function VenueHeroImage({ option, emojiSizeClass = 'text-[80px]' }: Props
       setSrc(directImageUrl);
     }
   }, [venue, directImageUrl, option.id, option.imageUrl]);
+
+  const galleryUrls =
+    Array.isArray(option.imageUrls) && option.imageUrls.length > 0
+      ? option.imageUrls.map((u) => resolveVenueImageUrl(u))
+      : [resolveVenueImageUrl(option.imageUrl)];
+
+  const showGalleryButton = venue && galleryUrls.length > 1;
 
   if (!venue && directImageUrl) {
     return (
@@ -202,25 +161,40 @@ export function VenueHeroImage({ option, emojiSizeClass = 'text-[80px]' }: Props
     );
   }
 
-  const carouselUrls =
-    Array.isArray(option.imageUrls) && option.imageUrls.length > 0
-      ? option.imageUrls.map((u) => resolveVenueImageUrl(u))
-      : [resolveVenueImageUrl(option.imageUrl)];
-
-  if (carouselUrls.length > 1) {
-    return <VenuePhotoCarousel urls={carouselUrls} photoKey={option.id} />;
-  }
-
   return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={src || VENUE_IMAGE_PLACEHOLDER}
-      alt=""
-      width={800}
-      height={600}
-      className={SWIPE_PHOTO_IMG_CLASS}
-      draggable={false}
-      onError={() => setSrc(VENUE_IMAGE_PLACEHOLDER)}
-    />
+    <>
+      <div className="relative h-full min-h-0 w-full">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={src || VENUE_IMAGE_PLACEHOLDER}
+          alt=""
+          width={800}
+          height={600}
+          className={SWIPE_PHOTO_IMG_CLASS}
+          draggable={false}
+          onError={() => setSrc(VENUE_IMAGE_PLACEHOLDER)}
+        />
+        {showGalleryButton && (
+          <button
+            type="button"
+            aria-label="View all photos"
+            className="absolute right-2 top-2 z-[5] flex size-8 items-center justify-center rounded-full border-0 bg-white/55 text-[#2C2420] shadow-[0_1px_3px_rgba(44,36,32,0.12)] backdrop-blur-[1px] transition-opacity hover:bg-white/70"
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
+              setGalleryOpen(true);
+            }}
+          >
+            <Images className="size-4 shrink-0" strokeWidth={2} aria-hidden />
+          </button>
+        )}
+      </div>
+      {mounted &&
+        galleryOpen &&
+        createPortal(
+          <VenuePhotoGalleryModal urls={galleryUrls} onClose={() => setGalleryOpen(false)} />,
+          document.body
+        )}
+    </>
   );
 }
