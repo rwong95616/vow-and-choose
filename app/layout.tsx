@@ -15,8 +15,26 @@ const playfairDisplay = Playfair_Display({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL ??
+      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
+  ),
   title: 'Vow & Choose',
-  description: 'Swipe together on wedding decisions',
+  description:
+    'Swipe on wedding venues together and build your dream list as a couple. Find your perfect wedding venue with Vow & Choose.',
+  openGraph: {
+    title: 'Vow and Choose',
+    description:
+      'Swipe on wedding venues together and build your dream list as a couple. Find your perfect wedding venue with Vow & Choose.',
+    images: [
+      {
+        url: '/images/blush-champagne-color-theme.jpg',
+        width: 1200,
+        height: 800,
+        alt: 'Blush & Champagne wedding color theme',
+      },
+    ],
+  },
 };
 
 export default function RootLayout({
