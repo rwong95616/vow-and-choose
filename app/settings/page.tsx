@@ -144,16 +144,20 @@ function SettingsContent() {
     'w-full rounded-[12px] border border-[#D3D1C7] py-[14px] px-[16px] text-[#2C2420] outline-none';
 
   return (
-    <div className="w-full min-h-screen bg-[#FAF7F2] pt-[60px] px-[16px] pb-[8px]">
-      <div className="flex flex-col w-full gap-[16px]">
-        <h1
-          className="font-[family-name:var(--font-playfair)] text-[40px] font-semibold text-[#2C2420]"
-          style={{ lineHeight: 1.2 }}
-        >
-          Settings
-        </h1>
+    <div className="-mx-4 min-h-[100dvh] px-6 pb-32 pt-14">
+      <h1
+        className="mb-8 font-[family-name:var(--font-playfair)]"
+        style={{
+          fontSize: '32px',
+          fontWeight: 600,
+          lineHeight: '48px',
+          color: '#2C2420',
+        }}
+      >
+        Settings
+      </h1>
 
-        <div className={SETTINGS_CARD_CLASS}>
+      <div className={`${SETTINGS_CARD_CLASS} mb-[24px] last:mb-0`}>
           <p className="text-xs font-semibold tracking-widest text-[#C4A96B]">YOUR COUPLE CODE</p>
           <div className="flex items-center justify-between gap-4">
             <span className="font-[family-name:var(--font-playfair)] text-[32px] font-bold text-[#2C2420]">
@@ -178,7 +182,7 @@ function SettingsContent() {
           </p>
         </div>
 
-        <div className={SETTINGS_CARD_CLASS}>
+      <div className={`${SETTINGS_CARD_CLASS} mb-[24px] last:mb-0`}>
           {!editingLocation ? (
             <>
               <div className="flex items-center justify-between">
@@ -323,7 +327,7 @@ function SettingsContent() {
           )}
         </div>
 
-        <div className={SETTINGS_CARD_CLASS}>
+      <div className={`${SETTINGS_CARD_CLASS} mb-[24px] last:mb-0`}>
           <p className="text-xs font-semibold tracking-widest text-[#C4A96B]">ABOUT</p>
           <p className="text-base text-[#6B5F58]" style={{ fontFamily: 'var(--font-dm-sans)' }}>
             Vow & Choose helps couples plan their dream wedding together. Swipe through venues, vendors,
@@ -333,7 +337,6 @@ function SettingsContent() {
             Version 1.0.0
           </p>
         </div>
-      </div>
     </div>
   );
 }

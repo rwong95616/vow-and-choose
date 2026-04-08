@@ -83,17 +83,17 @@ export function AppShell({ children, variant = 'default' }: Props) {
 
   const isSwipe = variant === 'swipe';
 
-  /** Picks pages set their own top spacing (e.g. pt-[60px]); avoid stacking the default 0.75rem main padding. */
+  /** Picks + Settings use the same inner wrapper spacing as Our Picks; avoid stacking the default 0.75rem main padding. */
   const mainPaddingTop = isSwipe
     ? `pt-[env(safe-area-inset-top,0px)]`
-    : picksOn
+    : picksOn || settingsOn
       ? 'pt-[env(safe-area-inset-top,0px)]'
       : 'pt-[max(0.75rem,env(safe-area-inset-top,0px))]';
 
-  /** Floating nav overlays content; picks pages use Figma padding on the inner wrapper — no extra main bottom inset for nav. */
+  /** Floating nav overlays content; picks/settings use Figma padding on the inner wrapper — no extra main bottom inset for nav. */
   const mainPaddingBottom = isSwipe
     ? SWIPE_MAIN_BOTTOM_PAD
-    : picksOn
+    : picksOn || settingsOn
       ? 'pb-[env(safe-area-inset-bottom,0px)]'
       : 'pb-[calc(5rem+env(safe-area-inset-bottom,0px))]';
 
@@ -105,7 +105,7 @@ export function AppShell({ children, variant = 'default' }: Props) {
       active ? rose : grey
     }`;
 
-  const mainHorizontal = settingsOn ? 'px-0' : 'px-4';
+  const mainHorizontal = 'px-4';
 
   return (
     <div
