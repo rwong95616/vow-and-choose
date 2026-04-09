@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 
-const SPLASH_MS = 2000;
+const SPLASH_MS = 1500;
 const FADE_MS = 500;
 
 export function SplashScreen({ children }: { children: React.ReactNode }) {
