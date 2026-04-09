@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { DM_Sans, Playfair_Display } from 'next/font/google';
+import { SplashScreen } from '@/components/SplashScreen';
 import './globals.css';
 
 const dmSans = DM_Sans({
@@ -10,7 +11,8 @@ const dmSans = DM_Sans({
 
 const playfairDisplay = Playfair_Display({
   subsets: ['latin'],
-  weight: ['600'],
+  weight: ['400', '600'],
+  style: ['normal', 'italic'],
   variable: '--font-playfair',
 });
 
@@ -44,7 +46,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${dmSans.variable} ${playfairDisplay.variable}`}>
-      <body className="font-sans min-h-screen bg-[#FAF7F2]">{children}</body>
+      <body className="font-sans min-h-screen bg-[#FAF7F2]">
+        <SplashScreen>{children}</SplashScreen>
+      </body>
     </html>
   );
 }
