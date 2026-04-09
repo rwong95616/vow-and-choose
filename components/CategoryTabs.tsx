@@ -10,7 +10,7 @@ type Props = {
 export function CategoryTabs({ active, onChange }: Props) {
   return (
     <div
-      className="no-scrollbar flex snap-x snap-mandatory items-center gap-2 overflow-x-auto py-1.5"
+      className="-mr-4 no-scrollbar flex snap-x snap-mandatory items-center gap-2 overflow-x-auto py-1.5 pr-4"
       role="tablist"
     >
       {CATEGORY_ORDER.map((id) => {
