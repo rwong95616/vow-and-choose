@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { StepConnect } from '@/components/onboarding/StepConnect';
 import { StepLocation } from '@/components/onboarding/StepLocation';
@@ -76,6 +77,14 @@ export function OnboardingFlow({ initialStep = 1, joinCodePrefill, onComplete }:
       >
         {!showCoupleCodeOnly && !showRoleScreen && !showLocation && (
           <header className="mb-8 text-center">
+            <Image
+              src="/images/Gold%20logo.png"
+              alt=""
+              width={83}
+              height={65}
+              className="mx-auto mb-4 h-[65px] w-[83px] object-contain"
+              priority
+            />
             <h1 className="font-display text-[32px] font-semibold leading-[1.15] tracking-[-0.02em] text-ink">
               Vow & Choose
             </h1>
