@@ -337,6 +337,18 @@ function SettingsContent() {
             Version 1.0.0
           </p>
         </div>
+
+      <p className="mt-6 text-center">
+        <a
+          href="https://www.termsfeed.com/live/2209815e-d18d-4c9e-9bdd-ee210cf389d5"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-sm font-medium text-[#884E50]"
+          style={{ fontFamily: 'var(--font-dm-sans)' }}
+        >
+          Privacy Policy
+        </a>
+      </p>
     </div>
   );
 }
