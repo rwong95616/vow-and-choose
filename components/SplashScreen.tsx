@@ -1,19 +1,31 @@
 'use client';
 
 import Image from 'next/image';
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useState } from 'react';
 
 const SPLASH_MS = 1500;
 const FADE_MS = 500;
+const SESSION_SPLASH_SHOWN_KEY = 'vow-splash-shown';
 
 export function SplashScreen({ children }: { children: React.ReactNode }) {
   const [show, setShow] = useState(true);
   const [fadeOut, setFadeOut] = useState(false);
 
+  useLayoutEffect(() => {
+    try {
+      if (sessionStorage.getItem(SESSION_SPLASH_SHOWN_KEY) === '1') {
+        setShow(false);
+      }
+    } catch {
+      /* sessionStorage unavailable (e.g. private mode) */
+    }
+  }, []);
+
   useEffect(() => {
+    if (!show) return;
     const t = window.setTimeout(() => setFadeOut(true), SPLASH_MS);
     return () => window.clearTimeout(t);
-  }, []);
+  }, [show]);
 
   return (
     <>
@@ -26,7 +38,13 @@ export function SplashScreen({ children }: { children: React.ReactNode }) {
           }`}
           style={{ transitionDuration: `${FADE_MS}ms` }}
           onTransitionEnd={(e) => {
-            if (e.propertyName === 'opacity' && fadeOut) setShow(false);
+            if (e.propertyName !== 'opacity' || !fadeOut) return;
+            try {
+              sessionStorage.setItem(SESSION_SPLASH_SHOWN_KEY, '1');
+            } catch {
+              /* ignore */
+            }
+            setShow(false);
           }}
         >
           <div className="flex min-h-full w-full flex-col items-center justify-center">
