@@ -282,7 +282,7 @@ export function StepConnect({
 
   if (createdInfo) {
     return (
-      <div className="flex w-full flex-col items-center px-0.5">
+      <div className="flex w-full flex-col items-center overflow-visible px-0.5">
         <h2 className="text-center font-display text-[32px] font-bold leading-tight tracking-[-0.02em] text-ink">
           Your couple code
         </h2>
@@ -295,7 +295,7 @@ export function StepConnect({
           Share this with your partner so they can join
         </p>
 
-        <div className="mt-6 flex w-full max-w-full flex-col gap-3">
+        <div className="mt-6 flex w-full max-w-full flex-col gap-3 overflow-visible py-px">
           <button
             type="button"
             onClick={shareLink}
@@ -309,14 +309,16 @@ export function StepConnect({
             <IconShare className="h-5 w-5 shrink-0 text-white" />
             Share link
           </button>
-          <button
-            type="button"
-            onClick={copyCode}
-            className="flex w-full items-center justify-center gap-2.5 rounded-full border-[0.5px] border-ink bg-transparent py-[14px] font-sans text-body-md font-semibold text-ink transition hover:bg-white/60 active:scale-[0.99]"
-          >
-            <IconCopy className="h-5 w-5 shrink-0" />
-            {copiedCode ? 'Copied!' : 'Copy code'}
-          </button>
+          <div className="w-full overflow-visible pt-px">
+            <button
+              type="button"
+              onClick={copyCode}
+              className="flex w-full items-center justify-center gap-2.5 rounded-full border-[0.5px] border-ink bg-transparent py-[14px] font-sans text-body-md font-semibold text-ink transition hover:bg-white/60 active:scale-[0.99]"
+            >
+              <IconCopy className="h-5 w-5 shrink-0" />
+              {copiedCode ? 'Copied!' : 'Copy code'}
+            </button>
+          </div>
         </div>
 
         <button

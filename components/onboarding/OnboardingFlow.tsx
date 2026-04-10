@@ -74,7 +74,7 @@ export function OnboardingFlow({ initialStep = 1, joinCodePrefill, onComplete }:
       } ${showLocation ? 'bg-location-canvas' : showRoleScreen ? 'bg-role-canvas' : 'bg-page'}`}
     >
       <div
-        className={`flex flex-1 flex-col ${step === 1 || step === 2 || showLocation ? 'justify-center' : ''}`}
+        className={`flex flex-1 flex-col overflow-visible ${step === 1 || step === 2 || showLocation ? 'justify-center' : ''}`}
       >
         {!showCoupleCodeOnly && !showRoleScreen && !showLocation && (
           <header className="mb-8 text-center">
