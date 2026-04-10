@@ -120,14 +120,36 @@ export function OurPicksSections() {
   const { couple, ready } = useCouple();
   const coupleId = couple?.coupleId;
   const { swipes, loading: picksLoading } = usePicks(coupleId);
+  const skipLocationCatalog =
+    !!couple?.locationSkipped && !couple?.locationState?.trim();
   const { venues, loading: venuesLoading } = useVenues(couple?.locationState, couple?.locationCity, {
     enabled: ready,
+    skipStateFilter: skipLocationCatalog,
   });
 
   const [cacheVenues, setCacheVenues] = useState<WeddingOption[]>([]);
   const [cacheLoaded, setCacheLoaded] = useState(true);
 
   useEffect(() => {
+    if (skipLocationCatalog) {
+      setCacheLoaded(false);
+      const supabase = createBrowserClient();
+      void supabase
+        .from('venue_cache')
+        .select('results')
+        .eq('location_key', 'all-states')
+        .maybeSingle()
+        .then(({ data, error }) => {
+          if (error) {
+            setCacheVenues([]);
+          } else {
+            const rows = Array.isArray(data?.results) ? (data.results as WeddingOption[]) : [];
+            setCacheVenues(rows);
+          }
+          setCacheLoaded(true);
+        });
+      return;
+    }
     if (!couple?.locationState?.trim() || couple.locationCity === undefined) {
       setCacheVenues([]);
       setCacheLoaded(true);
@@ -150,7 +172,7 @@ export function OurPicksSections() {
         }
         setCacheLoaded(true);
       });
-  }, [couple?.locationState, couple?.locationCity]);
+  }, [couple?.locationState, couple?.locationCity, skipLocationCatalog]);
 
   const [selectedItem, setSelectedItem] = useState<ItemDetailModalItem | null>(null);
 
@@ -166,13 +188,14 @@ export function OurPicksSections() {
     [rawAggregated]
   );
 
-  /** Only show venue picks whose place_id exists in this couple's location catalog (API + venue_cache). */
+  /** Only show venue picks whose place_id exists in this couple's location catalog (API + venue_cache), unless location was skipped with no state — then show all liked venues. */
   const aggregated = useMemo(() => {
     return rawAggregated.filter((p) => {
       if (p.category !== 'venue') return true;
+      if (skipLocationCatalog) return true;
       return venueById.has(p.item_id);
     });
-  }, [rawAggregated, venueById]);
+  }, [rawAggregated, venueById, skipLocationCatalog]);
 
   const needsVenueResolution = useMemo(
     () => aggregated.some((p) => p.category === 'venue'),
