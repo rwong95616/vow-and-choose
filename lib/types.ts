@@ -25,4 +25,6 @@ export type CoupleStorage = {
   locationCity?: string;
   /** True when this device created the couple (shows location step) */
   isCreator?: boolean;
+  /** Creator chose "Skip for now" on location onboarding — counts as onboarding complete */
+  locationSkipped?: boolean;
 };

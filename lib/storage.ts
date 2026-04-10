@@ -35,6 +35,8 @@ export function clearCouple() {
 export function isOnboardingComplete(): boolean {
   const c = loadCouple();
   if (!c?.coupleId || !c.coupleCode || !c.userRole) return false;
-  if (c.isCreator) return !!c.locationState?.trim();
+  if (c.isCreator) {
+    return !!c.locationState?.trim() || !!c.locationSkipped;
+  }
   return true;
 }

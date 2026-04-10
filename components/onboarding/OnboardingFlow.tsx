@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { StepConnect } from '@/components/onboarding/StepConnect';
 import { StepLocation } from '@/components/onboarding/StepLocation';
 import { StepRole } from '@/components/onboarding/StepRole';
-import { loadCouple, saveCouplePartial } from '@/lib/storage';
+import { isOnboardingComplete, loadCouple, saveCouplePartial } from '@/lib/storage';
 
 type Props = {
   /** 1 = connect, 2 = role, 3 = location (creator) */
@@ -106,7 +106,18 @@ export function OnboardingFlow({ initialStep = 1, joinCodePrefill, onComplete }:
           <StepLocation
             coupleId={resolvedCoupleId}
             onDone={afterLocation}
-            onSkip={onComplete}
+            onSkip={() => {
+              console.log(
+                '[Skip location] isOnboardingComplete() before saveCouplePartial({ locationSkipped: true }):',
+                isOnboardingComplete()
+              );
+              saveCouplePartial({ locationSkipped: true });
+              console.log(
+                '[Skip location] isOnboardingComplete() after saveCouplePartial({ locationSkipped: true }):',
+                isOnboardingComplete()
+              );
+              onComplete();
+            }}
           />
         )}
       </div>

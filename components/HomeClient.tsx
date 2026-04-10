@@ -24,7 +24,15 @@ export function HomeClient() {
   const [onboardingDone, setOnboardingDone] = useState(false);
 
   useEffect(() => {
-    if (ready) setOnboardingDone(isOnboardingComplete());
+    if (ready) {
+      const nextOnboardingDone = isOnboardingComplete();
+      console.log(
+        '[HomeClient] onboarding sync useEffect: setting onboardingDone to',
+        nextOnboardingDone,
+        '(from isOnboardingComplete())'
+      );
+      setOnboardingDone(nextOnboardingDone);
+    }
   }, [ready, couple]);
 
   useEffect(() => {
