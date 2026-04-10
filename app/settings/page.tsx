@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ChevronDown, ChevronUp, Copy } from 'lucide-react';
+import { ChevronDown, Copy } from 'lucide-react';
 import { AppShell } from '@/components/AppShell';
 import { OnboardingFlow } from '@/components/onboarding/OnboardingFlow';
 import { useCouple } from '@/lib/hooks/useCouple';
@@ -223,27 +223,39 @@ function SettingsContent() {
                   type="button"
                   aria-expanded={stateDropdownOpen}
                   aria-haspopup="listbox"
-                  className={`flex w-full items-center justify-between rounded-[12px] border py-[14px] pl-4 pr-4 text-base text-[#2C2420] ${
-                    stateDropdownOpen ? 'border-[#C4A96B]' : 'border-[#D3D1C7]'
+                  className={`flex w-full items-center justify-between rounded-[14px] border border-[#D1C8B8] bg-white px-4 py-3.5 text-left text-[15px] outline-none transition focus-visible:ring-2 focus-visible:ring-[#D1C8B8] focus-visible:ring-offset-2 ${
+                    state.trim() ? 'text-[#2D2926]' : 'text-[#8E8E8E]'
                   }`}
                   style={{ fontFamily: 'var(--font-dm-sans)' }}
                   onClick={() => setStateDropdownOpen((open) => !open)}
                 >
-                  <span>{state}</span>
-                  {stateDropdownOpen ? (
-                    <ChevronUp size={20} className="shrink-0 text-[#6B5F58]" aria-hidden />
-                  ) : (
-                    <ChevronDown size={20} className="shrink-0 text-[#6B5F58]" aria-hidden />
-                  )}
+                  <span>{state.trim() ? state : 'Select state'}</span>
+                  <ChevronDown
+                    size={20}
+                    className={`h-5 w-5 shrink-0 text-[#8E8E8E] transition-transform duration-200 ${
+                      stateDropdownOpen ? 'rotate-180' : ''
+                    }`}
+                    aria-hidden
+                  />
                 </button>
                 {stateDropdownOpen ? (
                   <div
-                    className="mt-1 max-h-[240px] overflow-y-auto rounded-[14px] border-[0.5px] border-solid border-[#D4CEC8] bg-white shadow-[0_8px_24px_0_rgba(44,36,32,0.12)]"
+                    className="mt-1 max-h-[min(50vh,280px)] overflow-y-auto rounded-[14px] border border-[#D1C8B8] bg-white py-1 shadow-ds-medium"
                     role="listbox"
+                    aria-label="Select state"
                   >
+                    <button
+                      type="button"
+                      role="option"
+                      hidden
+                      disabled
+                    >
+                      Select state
+                    </button>
                     {ALL_STATES.map((s) => (
-                      <div
+                      <button
                         key={s}
+                        type="button"
                         role="option"
                         aria-selected={state === s}
                         onClick={() => {
@@ -252,13 +264,13 @@ function SettingsContent() {
                           setCitySelectedFromDropdown(false);
                           setStateDropdownOpen(false);
                         }}
-                        className={`w-full cursor-pointer px-4 py-[14px] text-left text-base text-[#2C2420] ${
-                          s === state ? 'bg-[#FAF7F2]' : 'bg-white hover:bg-[#FAF7F2]'
+                        className={`w-full px-4 py-3.5 text-left text-[15px] text-[#2D2926] transition hover:bg-[#F9F7F5] active:bg-[#F3F1EE] ${
+                          s === state ? 'bg-[#FAF7F2]' : 'bg-white'
                         }`}
                         style={{ fontFamily: 'var(--font-dm-sans)' }}
                       >
                         {s}
-                      </div>
+                      </button>
                     ))}
                   </div>
                 ) : null}
