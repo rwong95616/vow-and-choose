@@ -56,8 +56,13 @@ export function HomeClient() {
 
   const state = couple?.locationState;
   const city = couple?.locationCity;
+  const skipVenueStateFilter =
+    !!couple?.locationSkipped && !couple?.locationState?.trim();
 
-  const { venues, loading: venuesLoading } = useVenues(state, city, { enabled: ready });
+  const { venues, loading: venuesLoading } = useVenues(state, city, {
+    enabled: ready,
+    skipStateFilter: skipVenueStateFilter,
+  });
 
   const userRole = couple?.userRole ?? 'bride';
   const { decisions, persistSwipe, applyLocalSwipe, resetCategory } = useSwipes(

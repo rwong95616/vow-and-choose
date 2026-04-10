@@ -339,6 +339,20 @@ function cityHintsSfBay(city: string): boolean {
   );
 }
 
+function shuffleVenues<T>(items: T[]): T[] {
+  const arr = [...items];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+/** Shuffled national sample pack (multi-region) — when no state filter applies (e.g. skipped location). */
+export function getFallbackVenuesAllStatesRandomized(): WeddingOption[] {
+  return shuffleVenues(fallbackVenues);
+}
+
 /**
  * Sample venues matched to onboarding location when Places API is off or fails.
  * California gets an all-CA list; optional city boosts NorCal / SF-area cards to the top.
