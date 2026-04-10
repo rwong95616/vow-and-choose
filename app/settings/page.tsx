@@ -74,6 +74,8 @@ function SettingsContent() {
   const { couple, ready, updateLocation } = useCouple();
   const [copied, setCopied] = useState(false);
   const [editingLocation, setEditingLocation] = useState(false);
+  /** One-time: open wedding location editor if user skipped location during onboarding and has not set a state yet */
+  const [didInitLocationSkippedExpand, setDidInitLocationSkippedExpand] = useState(false);
   const [state, setState] = useState(couple?.locationState ?? '');
   const [city, setCity] = useState(couple?.locationCity ?? '');
   const [stateDropdownOpen, setStateDropdownOpen] = useState(false);
@@ -82,6 +84,14 @@ function SettingsContent() {
   const [cityLoading, setCityLoading] = useState(false);
   const [citySelectedFromDropdown, setCitySelectedFromDropdown] = useState(Boolean(couple?.locationCity));
   const [cityError, setCityError] = useState('');
+
+  useEffect(() => {
+    if (!ready || didInitLocationSkippedExpand || !couple) return;
+    setDidInitLocationSkippedExpand(true);
+    if (couple.locationSkipped && !couple.locationState?.trim()) {
+      setEditingLocation(true);
+    }
+  }, [ready, couple, didInitLocationSkippedExpand]);
 
   useEffect(() => {
     if (!ready || editingLocation) return;

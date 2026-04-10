@@ -24,14 +24,19 @@ export function useCouple() {
     const { coupleId } = loadCouple() ?? {};
     if (coupleId) {
       const supabase = createBrowserClient();
-      await supabase
+      const { error } = await supabase
         .from('couples')
         .update({
           location_state: locationState,
           location_city: locationCity,
         })
         .eq('id', coupleId);
+      if (error) {
+        setCouple(loadCouple());
+        return;
+      }
     }
+    saveCouplePartial({ locationSkipped: false });
     setCouple(loadCouple());
   }, []);
 

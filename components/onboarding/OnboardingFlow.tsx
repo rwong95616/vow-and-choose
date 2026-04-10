@@ -6,6 +6,7 @@ import { StepConnect } from '@/components/onboarding/StepConnect';
 import { StepLocation } from '@/components/onboarding/StepLocation';
 import { StepRole } from '@/components/onboarding/StepRole';
 import { isOnboardingComplete, loadCouple, saveCouplePartial } from '@/lib/storage';
+import { createBrowserClient } from '@/lib/supabase';
 
 type Props = {
   /** 1 = connect, 2 = role, 3 = location (creator) */
@@ -106,14 +107,28 @@ export function OnboardingFlow({ initialStep = 1, joinCodePrefill, onComplete }:
           <StepLocation
             coupleId={resolvedCoupleId}
             onDone={afterLocation}
-            onSkip={() => {
+            onSkip={async () => {
               console.log(
-                '[Skip location] isOnboardingComplete() before saveCouplePartial({ locationSkipped: true }):',
+                '[Skip location] isOnboardingComplete() before saveCouplePartial(skip + clear location):',
                 isOnboardingComplete()
               );
-              saveCouplePartial({ locationSkipped: true });
+              saveCouplePartial({
+                locationSkipped: true,
+                locationState: '',
+                locationCity: '',
+              });
+              if (resolvedCoupleId) {
+                const supabase = createBrowserClient();
+                await supabase
+                  .from('couples')
+                  .update({
+                    location_state: null,
+                    location_city: null,
+                  })
+                  .eq('id', resolvedCoupleId);
+              }
               console.log(
-                '[Skip location] isOnboardingComplete() after saveCouplePartial({ locationSkipped: true }):',
+                '[Skip location] isOnboardingComplete() after saveCouplePartial(skip + clear location):',
                 isOnboardingComplete()
               );
               onComplete();
