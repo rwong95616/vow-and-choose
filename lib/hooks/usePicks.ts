@@ -7,6 +7,7 @@ export type SwipeRow = {
   id: string;
   couple_id: string;
   user_role: 'bride' | 'groom';
+  swipe_user_id: string | null;
   category: string;
   item_id: string;
   decision: 'yes' | 'no';
@@ -26,7 +27,7 @@ export function usePicks(coupleId: string | undefined) {
     setLoading(true);
     const { data, error } = await supabase
       .from('swipes')
-      .select('id, couple_id, user_role, category, item_id, decision')
+      .select('id, couple_id, user_role, swipe_user_id, category, item_id, decision')
       .eq('couple_id', coupleId);
     if (error) setSwipes([]);
     else setSwipes((data ?? []) as SwipeRow[]);

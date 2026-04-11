@@ -24,11 +24,21 @@ type AggregatedPick = {
   badge: 'both' | 'bride' | 'groom';
 };
 
+function likerKey(s: SwipeRow): string {
+  return (s.swipe_user_id && s.swipe_user_id.trim()) || s.id;
+}
+
 function aggregateYesSwipes(swipes: SwipeRow[]): AggregatedPick[] {
   const yes = swipes.filter((s) => s.decision === 'yes');
   const byKey = new Map<
     string,
-    { category: string; item_id: string; bride: boolean; groom: boolean }
+    {
+      category: string;
+      item_id: string;
+      likers: Set<string>;
+      bride: boolean;
+      groom: boolean;
+    }
   >();
 
   for (const s of yes) {
@@ -36,9 +46,11 @@ function aggregateYesSwipes(swipes: SwipeRow[]): AggregatedPick[] {
     const prev = byKey.get(key) ?? {
       category: s.category,
       item_id: s.item_id,
+      likers: new Set<string>(),
       bride: false,
       groom: false,
     };
+    prev.likers.add(likerKey(s));
     if (s.user_role === 'bride') prev.bride = true;
     if (s.user_role === 'groom') prev.groom = true;
     byKey.set(key, prev);
@@ -47,7 +59,7 @@ function aggregateYesSwipes(swipes: SwipeRow[]): AggregatedPick[] {
   const out: AggregatedPick[] = [];
   for (const v of byKey.values()) {
     let badge: AggregatedPick['badge'];
-    if (v.bride && v.groom) badge = 'both';
+    if (v.likers.size >= 2 || (v.bride && v.groom)) badge = 'both';
     else if (v.bride) badge = 'bride';
     else badge = 'groom';
     out.push({ category: v.category, item_id: v.item_id, badge });

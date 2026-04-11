@@ -12,16 +12,25 @@ type ItemPick = {
   category: string;
   bride: boolean;
   groom: boolean;
+  mutual: boolean;
   option?: WeddingOption;
 };
 
-function buildItems(swipes: SwipeRow[]): Map<string, Map<string, { bride: boolean; groom: boolean }>> {
-  const map = new Map<string, Map<string, { bride: boolean; groom: boolean }>>();
+type ItemMatchState = { bride: boolean; groom: boolean; likers: Set<string> };
+
+function buildItems(swipes: SwipeRow[]): Map<string, Map<string, ItemMatchState>> {
+  const map = new Map<string, Map<string, ItemMatchState>>();
   for (const s of swipes) {
     if (s.decision !== 'yes') continue;
     if (!map.has(s.category)) map.set(s.category, new Map());
     const m = map.get(s.category)!;
-    const cur = m.get(s.item_id) ?? { bride: false, groom: false };
+    const cur = m.get(s.item_id) ?? {
+      bride: false,
+      groom: false,
+      likers: new Set<string>(),
+    };
+    const uid = (s.swipe_user_id && s.swipe_user_id.trim()) || s.id;
+    cur.likers.add(uid);
     if (s.user_role === 'bride') cur.bride = true;
     if (s.user_role === 'groom') cur.groom = true;
     m.set(s.item_id, cur);
@@ -61,17 +70,19 @@ export function MatchesList({ swipes, venueOptions }: Props) {
         } else {
           option = findStaticOption(cat, itemId);
         }
+        const mutual = v.likers.size >= 2 || (v.bride && v.groom);
         items.push({
           itemId,
           category: cat,
           bride: v.bride,
           groom: v.groom,
+          mutual,
           option,
         });
       }
       items.sort((a, b) => {
-        const ma = a.bride && a.groom ? 0 : 1;
-        const mb = b.bride && b.groom ? 0 : 1;
+        const ma = a.mutual ? 0 : 1;
+        const mb = b.mutual ? 0 : 1;
         if (ma !== mb) return ma - mb;
         return (a.option?.title ?? '').localeCompare(b.option?.title ?? '');
       });
@@ -100,7 +111,7 @@ export function MatchesList({ swipes, venueOptions }: Props) {
             </h2>
             <ul className="flex flex-col gap-2">
               {items.map((it) => {
-                const mutual = it.bride && it.groom;
+                const mutual = it.mutual;
                 const opt = it.option;
                 return (
                   <li

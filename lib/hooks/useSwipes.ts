@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { createBrowserClient } from '@/lib/supabase';
+import { getOrCreateSwipeUserId } from '@/lib/swipeUserId';
 import type { UserRole } from '@/lib/types';
 
 export type Decision = 'yes' | 'no';
@@ -16,7 +17,8 @@ export function useSwipes(
   const [loading, setLoading] = useState(true);
 
   const fetchDecisions = useCallback(async () => {
-    if (!coupleId || !userRole) {
+    const swipeUserId = getOrCreateSwipeUserId();
+    if (!coupleId || !userRole || !swipeUserId) {
       setDecisions({});
       setLoading(false);
       return;
@@ -26,7 +28,7 @@ export function useSwipes(
       .from('swipes')
       .select('item_id, decision')
       .eq('couple_id', coupleId)
-      .eq('user_role', userRole)
+      .eq('swipe_user_id', swipeUserId)
       .eq('category', category);
     if (error) {
       setDecisions({});
@@ -46,16 +48,18 @@ export function useSwipes(
 
   const persistSwipe = useCallback(
     async (itemId: string, decision: Decision) => {
-      if (!coupleId || !userRole) return;
+      const swipeUserId = getOrCreateSwipeUserId();
+      if (!coupleId || !userRole || !swipeUserId) return;
       const { error } = await supabase.from('swipes').upsert(
         {
           couple_id: coupleId,
+          swipe_user_id: swipeUserId,
           user_role: userRole,
           category,
           item_id: itemId,
           decision,
         },
-        { onConflict: 'couple_id,user_role,category,item_id' }
+        { onConflict: 'couple_id,swipe_user_id,category,item_id' }
       );
       if (error) {
         console.error('persistSwipe error:', error);
@@ -78,12 +82,13 @@ export function useSwipes(
   );
 
   const undo = useCallback(async () => {
-    if (!coupleId || !userRole) return;
+    const swipeUserId = getOrCreateSwipeUserId();
+    if (!coupleId || !userRole || !swipeUserId) return;
     const { data } = await supabase
       .from('swipes')
       .select('id')
       .eq('couple_id', coupleId)
-      .eq('user_role', userRole)
+      .eq('swipe_user_id', swipeUserId)
       .eq('category', category)
       .order('created_at', { ascending: false })
       .limit(1)
@@ -94,7 +99,7 @@ export function useSwipes(
       .from('swipes')
       .select('item_id, decision')
       .eq('couple_id', coupleId)
-      .eq('user_role', userRole)
+      .eq('swipe_user_id', swipeUserId)
       .eq('category', category);
     const map: Record<string, Decision> = {};
     for (const row of rows ?? []) {
@@ -104,12 +109,13 @@ export function useSwipes(
   }, [coupleId, userRole, category, supabase]);
 
   const resetCategory = useCallback(async () => {
-    if (!coupleId || !userRole) return;
+    const swipeUserId = getOrCreateSwipeUserId();
+    if (!coupleId || !userRole || !swipeUserId) return;
     await supabase
       .from('swipes')
       .delete()
       .eq('couple_id', coupleId)
-      .eq('user_role', userRole)
+      .eq('swipe_user_id', swipeUserId)
       .eq('category', category);
     setDecisions({});
   }, [coupleId, userRole, category, supabase]);
