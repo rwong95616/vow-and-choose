@@ -9,6 +9,8 @@ export type PickCardProps = {
   /** When set, shown below the name instead of the location row (no pin). */
   description?: string;
   badge: 'our-pick' | 'bride' | 'groom' | 'both';
+  /** Replaces default badge label (e.g. "Bride 1" for same-role couple, one liker). */
+  badgeTextOverride?: string;
   imageUrl: string;
   swatchColors?: string[];
   bgColor?: 'warm' | 'white';
@@ -44,6 +46,7 @@ export function PickCard({
   location = '',
   description,
   badge,
+  badgeTextOverride,
   imageUrl,
   swatchColors,
   onClick,
@@ -113,7 +116,7 @@ export function PickCard({
           className={`whitespace-nowrap rounded-full px-4 py-2 text-sm text-white ${BADGE_SURFACE[badge]}`}
           style={dmSansFont}
         >
-          {BADGE_LABEL[badge]}
+          {badgeTextOverride ?? BADGE_LABEL[badge]}
         </span>
       </div>
     </div>

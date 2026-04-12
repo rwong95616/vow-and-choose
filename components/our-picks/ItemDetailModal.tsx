@@ -11,6 +11,7 @@ export type ItemDetailModalItem = {
   /** Color-theme palette dots (same styling as PickCard). */
   swatchColors?: string[];
   badge: 'our-pick' | 'bride' | 'groom' | 'both';
+  badgeTextOverride?: string;
   imageUrl: string;
 };
 
@@ -143,7 +144,7 @@ export function ItemDetailModal({ isOpen, onClose, item }: ItemDetailModalProps)
               <div
                 className={`inline-flex h-[35px] w-fit shrink-0 items-center justify-center self-start rounded-full px-4 py-0 text-[14px] font-medium text-white ${BADGE_SURFACE[item.badge]}`}
               >
-                {BADGE_LABEL[item.badge]}
+                {item.badgeTextOverride ?? BADGE_LABEL[item.badge]}
               </div>
             </div>
           </motion.div>

@@ -22,23 +22,69 @@ type AggregatedPick = {
   category: string;
   item_id: string;
   badge: 'both' | 'bride' | 'groom';
+  /** When the couple shares one role and only one partner liked the item (e.g. "Bride 1"). Mixed-role couples use default "Bride"/"Groom". */
+  badgeTextOverride?: string;
 };
 
 function likerKey(s: SwipeRow): string {
   return (s.swipe_user_id && s.swipe_user_id.trim()) || s.id;
 }
 
-function aggregateYesSwipes(swipes: SwipeRow[]): AggregatedPick[] {
+function swipeTimeMs(createdAt: string | null | undefined): number {
+  if (createdAt == null || createdAt === '') return 0;
+  const t = Date.parse(createdAt);
+  return Number.isNaN(t) ? 0 : t;
+}
+
+/** Up to 2 partners per role (by latest `created_at` per `swipe_user_id`) for numbering 1 / 2 in same-role couples. */
+function coupleRoleContext(swipes: SwipeRow[], coupleId: string | undefined) {
+  const scoped =
+    coupleId != null && coupleId !== ''
+      ? swipes.filter((s) => s.couple_id === coupleId)
+      : [];
+
+  const brideLast = new Map<string, number>();
+  const groomLast = new Map<string, number>();
+  for (const s of scoped) {
+    console.log('[coupleRoleContext] scoped row (swipe_user_id + role)', {
+      swipe_user_id: s.swipe_user_id,
+      user_role: s.user_role,
+    });
+    const uid = s.swipe_user_id?.trim();
+    if (!uid) continue;
+    const t = swipeTimeMs(s.created_at);
+    if (s.user_role === 'bride') {
+      brideLast.set(uid, Math.max(brideLast.get(uid) ?? 0, t));
+    } else {
+      groomLast.set(uid, Math.max(groomLast.get(uid) ?? 0, t));
+    }
+  }
+
+  const top2ByLatestSwipe = (lastById: Map<string, number>): string[] =>
+    [...lastById.entries()]
+      .sort((a, b) => {
+        if (b[1] !== a[1]) return b[1] - a[1];
+        return a[0].localeCompare(b[0]);
+      })
+      .slice(0, 2)
+      .map(([id]) => id);
+
+  const brideIds = top2ByLatestSwipe(brideLast);
+  const groomIds = top2ByLatestSwipe(groomLast);
+  console.log('[coupleRoleContext] brideLast map (uid -> latest ms)', Object.fromEntries(brideLast));
+  console.log('[coupleRoleContext] brideIds after top-2', brideIds);
+  const mixed = brideIds.length > 0 && groomIds.length > 0;
+
+  return { mixed, brideIds, groomIds };
+}
+
+type LikerInfo = { role: 'bride' | 'groom'; swipeUserId: string | null };
+
+function aggregateYesSwipes(swipes: SwipeRow[], ctx: ReturnType<typeof coupleRoleContext>): AggregatedPick[] {
   const yes = swipes.filter((s) => s.decision === 'yes');
   const byKey = new Map<
     string,
-    {
-      category: string;
-      item_id: string;
-      likers: Set<string>;
-      bride: boolean;
-      groom: boolean;
-    }
+    { category: string; item_id: string; byLiker: Map<string, LikerInfo> }
   >();
 
   for (const s of yes) {
@@ -46,23 +92,53 @@ function aggregateYesSwipes(swipes: SwipeRow[]): AggregatedPick[] {
     const prev = byKey.get(key) ?? {
       category: s.category,
       item_id: s.item_id,
-      likers: new Set<string>(),
-      bride: false,
-      groom: false,
+      byLiker: new Map<string, LikerInfo>(),
     };
-    prev.likers.add(likerKey(s));
-    if (s.user_role === 'bride') prev.bride = true;
-    if (s.user_role === 'groom') prev.groom = true;
+    prev.byLiker.set(likerKey(s), {
+      role: s.user_role,
+      swipeUserId: s.swipe_user_id?.trim() ?? null,
+    });
     byKey.set(key, prev);
   }
 
   const out: AggregatedPick[] = [];
   for (const v of byKey.values()) {
-    let badge: AggregatedPick['badge'];
-    if (v.likers.size >= 2 || (v.bride && v.groom)) badge = 'both';
-    else if (v.bride) badge = 'bride';
-    else badge = 'groom';
-    out.push({ category: v.category, item_id: v.item_id, badge });
+    const sortedLikers = [...v.byLiker.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+    const n = sortedLikers.length;
+    if (n === 0) continue;
+
+    if (n === 1) {
+      const [, info] = sortedLikers[0];
+      const { role, swipeUserId } = info;
+      const base: AggregatedPick = {
+        category: v.category,
+        item_id: v.item_id,
+        badge: role === 'bride' ? 'bride' : 'groom',
+      };
+      if (!ctx.mixed) {
+        if (role === 'bride' && ctx.brideIds.length > 0) {
+          const pos = swipeUserId != null ? ctx.brideIds.indexOf(swipeUserId) : -1;
+          if (pos >= 0) base.badgeTextOverride = `Bride ${pos + 1}`;
+        } else if (role === 'groom' && ctx.groomIds.length > 0) {
+          const pos = swipeUserId != null ? ctx.groomIds.indexOf(swipeUserId) : -1;
+          if (pos >= 0) base.badgeTextOverride = `Groom ${pos + 1}`;
+        }
+      }
+      out.push(base);
+      continue;
+    }
+
+    const roles = new Set(sortedLikers.map(([, inf]) => inf.role));
+    const hasBride = roles.has('bride');
+    const hasGroom = roles.has('groom');
+
+    if (hasBride && hasGroom) {
+      out.push({ category: v.category, item_id: v.item_id, badge: 'both' });
+      continue;
+    }
+
+    // Two+ likers, same role → mutual "Our Pick"
+    out.push({ category: v.category, item_id: v.item_id, badge: 'both' });
   }
   return out;
 }
@@ -193,7 +269,10 @@ export function OurPicksSections() {
     [cacheVenues, venues]
   );
 
-  const rawAggregated = useMemo(() => aggregateYesSwipes(swipes), [swipes]);
+  const rawAggregated = useMemo(() => {
+    const ctx = coupleRoleContext(swipes, coupleId);
+    return aggregateYesSwipes(swipes, ctx);
+  }, [swipes, coupleId]);
 
   const hasVenueYesSwipes = useMemo(
     () => rawAggregated.some((p) => p.category === 'venue'),
@@ -297,6 +376,7 @@ export function OurPicksSections() {
                           : undefined
                       }
                       badge={p.badge}
+                      badgeTextOverride={p.badgeTextOverride}
                       imageUrl={meta.imageUrl}
                       onClick={() =>
                         setSelectedItem({
@@ -309,6 +389,7 @@ export function OurPicksSections() {
                               ? getColorThemeSwatches(p.item_id)
                               : undefined,
                           badge: p.badge,
+                          badgeTextOverride: p.badgeTextOverride,
                           imageUrl: meta.imageUrl,
                         })
                       }

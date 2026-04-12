@@ -68,7 +68,8 @@ export function HomeClient() {
   const { decisions, persistSwipe, applyLocalSwipe, resetCategory } = useSwipes(
     couple?.coupleId,
     userRole,
-    category
+    category,
+    couple?.isCreator
   );
 
   const cards = useMemo(() => {

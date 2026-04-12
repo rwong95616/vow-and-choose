@@ -10,14 +10,16 @@ export type Decision = 'yes' | 'no';
 export function useSwipes(
   coupleId: string | undefined,
   userRole: UserRole | undefined,
-  category: string
+  category: string,
+  /** When false (joiner), swipe id is not shared with creator on the same device. */
+  isCreator?: boolean
 ) {
   const supabase = useMemo(() => createBrowserClient(), []);
   const [decisions, setDecisions] = useState<Record<string, Decision>>({});
   const [loading, setLoading] = useState(true);
 
   const fetchDecisions = useCallback(async () => {
-    const swipeUserId = getOrCreateSwipeUserId();
+    const swipeUserId = getOrCreateSwipeUserId(coupleId, isCreator);
     if (!coupleId || !userRole || !swipeUserId) {
       setDecisions({});
       setLoading(false);
@@ -40,7 +42,7 @@ export function useSwipes(
       setDecisions(map);
     }
     setLoading(false);
-  }, [coupleId, userRole, category, supabase]);
+  }, [coupleId, userRole, category, isCreator, supabase]);
 
   useEffect(() => {
     fetchDecisions();
@@ -48,7 +50,7 @@ export function useSwipes(
 
   const persistSwipe = useCallback(
     async (itemId: string, decision: Decision) => {
-      const swipeUserId = getOrCreateSwipeUserId();
+      const swipeUserId = getOrCreateSwipeUserId(coupleId, isCreator);
       if (!coupleId || !userRole || !swipeUserId) return;
       const { error } = await supabase.from('swipes').upsert(
         {
@@ -66,7 +68,7 @@ export function useSwipes(
         throw error;
       }
     },
-    [coupleId, userRole, category, supabase]
+    [coupleId, userRole, category, isCreator, supabase]
   );
 
   const applyLocalSwipe = useCallback((itemId: string, decision: Decision) => {
@@ -82,7 +84,7 @@ export function useSwipes(
   );
 
   const undo = useCallback(async () => {
-    const swipeUserId = getOrCreateSwipeUserId();
+    const swipeUserId = getOrCreateSwipeUserId(coupleId, isCreator);
     if (!coupleId || !userRole || !swipeUserId) return;
     const { data } = await supabase
       .from('swipes')
@@ -106,10 +108,10 @@ export function useSwipes(
       map[row.item_id] = row.decision as Decision;
     }
     setDecisions(map);
-  }, [coupleId, userRole, category, supabase]);
+  }, [coupleId, userRole, category, isCreator, supabase]);
 
   const resetCategory = useCallback(async () => {
-    const swipeUserId = getOrCreateSwipeUserId();
+    const swipeUserId = getOrCreateSwipeUserId(coupleId, isCreator);
     if (!coupleId || !userRole || !swipeUserId) return;
     await supabase
       .from('swipes')
@@ -118,7 +120,7 @@ export function useSwipes(
       .eq('swipe_user_id', swipeUserId)
       .eq('category', category);
     setDecisions({});
-  }, [coupleId, userRole, category, supabase]);
+  }, [coupleId, userRole, category, isCreator, supabase]);
 
   return {
     decisions,
