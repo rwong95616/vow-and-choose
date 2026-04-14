@@ -35,11 +35,6 @@ export function usePicks(coupleId: string | undefined) {
       )
       .eq('couple_id', coupleId)
       .eq('decision', 'yes');
-    console.log('[usePicks] Supabase swipes query full result', {
-      coupleId,
-      error,
-      rows: data ?? [],
-    });
     if (error) setSwipes([]);
     else setSwipes((data ?? []) as SwipeRow[]);
     setLoading(false);

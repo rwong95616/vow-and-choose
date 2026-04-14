@@ -269,7 +269,6 @@ export function StepConnect({
         locationState: data.location_state ?? undefined,
         locationCity: data.location_city ?? undefined,
       };
-      console.log('[StepConnect joinWithCode] saveCouplePartial', joinSavePatch);
       saveCouplePartial(joinSavePatch);
       onCreatedOrJoined({
         coupleId: data.id,

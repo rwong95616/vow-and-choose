@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AppShell } from '@/components/AppShell';
 import { CardDeck } from '@/components/CardDeck';
 import { CategoryTabs } from '@/components/CategoryTabs';
@@ -10,8 +10,7 @@ import { staticOptionsByCategory, type CategoryId } from '@/data/options';
 import { useCouple } from '@/lib/hooks/useCouple';
 import { useSwipes } from '@/lib/hooks/useSwipes';
 import { useVenues } from '@/lib/hooks/useVenues';
-import { isOnboardingComplete } from '@/lib/storage';
-import { saveCouplePartial } from '@/lib/storage';
+import { isOnboardingComplete, loadSwipeCategory, saveCouplePartial, saveSwipeCategory } from '@/lib/storage';
 import { createBrowserClient } from '@/lib/supabase';
 
 export function HomeClient() {
@@ -24,16 +23,20 @@ export function HomeClient() {
   const [onboardingDone, setOnboardingDone] = useState(false);
 
   useEffect(() => {
+    const saved = loadSwipeCategory();
+    if (saved) setCategory(saved);
+  }, []);
+
+  useEffect(() => {
     if (ready) {
-      const nextOnboardingDone = isOnboardingComplete();
-      console.log(
-        '[HomeClient] onboarding sync useEffect: setting onboardingDone to',
-        nextOnboardingDone,
-        '(from isOnboardingComplete())'
-      );
-      setOnboardingDone(nextOnboardingDone);
+      setOnboardingDone(isOnboardingComplete());
     }
   }, [ready, couple]);
+
+  const handleCategoryChange = useCallback((c: CategoryId) => {
+    setCategory(c);
+    saveSwipeCategory(c);
+  }, []);
 
   useEffect(() => {
     if (!couple?.coupleId || couple.locationState || couple.isCreator !== false) return;
@@ -43,16 +46,12 @@ export function HomeClient() {
       .select('location_state, location_city')
       .eq('id', couple.coupleId)
       .maybeSingle()
-      .then((res) => {
-        console.log('[HomeClient] Supabase couples select (location sync) full response', res);
-        const { data } = res;
+      .then(({ data }) => {
         if (data?.location_state) {
-          const patch = {
+          saveCouplePartial({
             locationState: data.location_state,
             locationCity: data.location_city ?? undefined,
-          };
-          console.log('[HomeClient] saveCouplePartial (location sync)', patch);
-          saveCouplePartial(patch);
+          });
           refresh();
         }
       });
@@ -69,7 +68,6 @@ export function HomeClient() {
   });
 
   const userRole = couple?.userRole ?? 'bride';
-  console.log('[HomeClient] couple?.isCreator passed to useSwipes:', couple?.isCreator);
   const { decisions, persistSwipe, applyLocalSwipe, resetCategory } = useSwipes(
     couple?.coupleId,
     userRole,
@@ -123,7 +121,7 @@ export function HomeClient() {
     <AppShell variant="swipe">
       <div className="flex h-full min-h-0 flex-1 flex-col gap-5 pt-[60px]">
         <div className="shrink-0 overflow-visible">
-          <CategoryTabs active={category} onChange={setCategory} />
+          <CategoryTabs active={category} onChange={handleCategoryChange} />
         </div>
 
         <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden pt-1">

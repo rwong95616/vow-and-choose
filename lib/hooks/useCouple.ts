@@ -10,25 +10,16 @@ export function useCouple() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    const fromStorage = loadCouple();
-    console.log(
-      '[useCouple] initial hydrate from localStorage only (no Supabase fetch in this hook)',
-      fromStorage
-    );
-    setCouple(fromStorage);
+    setCouple(loadCouple());
     setReady(true);
   }, []);
 
   const updateRole = useCallback((userRole: UserRole) => {
-    const patch = { userRole };
-    console.log('[useCouple] updateRole saveCouplePartial', patch);
-    saveCouplePartial(patch);
+    saveCouplePartial({ userRole });
     setCouple(loadCouple());
   }, []);
 
   const updateLocation = useCallback(async (locationState: string, locationCity?: string) => {
-    const patchLocation = { locationState, locationCity };
-    console.log('[useCouple] updateLocation saveCouplePartial (1)', patchLocation);
     saveCouplePartial({ locationState, locationCity });
     const { coupleId } = loadCouple() ?? {};
     if (coupleId) {
@@ -40,19 +31,13 @@ export function useCouple() {
           location_city: locationCity,
         })
         .eq('id', coupleId);
-      console.log('[useCouple] updateLocation Supabase couples update response', supabaseRes);
       if (supabaseRes.error) {
         setCouple(loadCouple());
-        console.log('[useCouple] updateLocation after error, loadCouple()', loadCouple());
         return;
       }
     }
-    const patchSkipped = { locationSkipped: false };
-    console.log('[useCouple] updateLocation saveCouplePartial (2)', patchSkipped);
     saveCouplePartial({ locationSkipped: false });
-    const after = loadCouple();
-    console.log('[useCouple] updateLocation loadCouple() after save', after);
-    setCouple(after);
+    setCouple(loadCouple());
   }, []);
 
   const refresh = useCallback(() => {

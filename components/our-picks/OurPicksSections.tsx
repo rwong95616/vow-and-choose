@@ -77,7 +77,6 @@ function coupleRoleContext(swipes: SwipeRow[], coupleId: string | undefined) {
 type LikerInfo = { role: 'bride' | 'groom'; swipeUserId: string | null };
 
 function aggregateYesSwipes(swipes: SwipeRow[], ctx: ReturnType<typeof coupleRoleContext>): AggregatedPick[] {
-  console.log('[OurPicks aggregateYesSwipes] input swipes', swipes);
   const yes = swipes.filter((s) => s.decision === 'yes');
   const byKey = new Map<
     string,
@@ -135,7 +134,6 @@ function aggregateYesSwipes(swipes: SwipeRow[], ctx: ReturnType<typeof coupleRol
     // Two+ likers, same role → mutual "Our Pick"
     out.push({ category: v.category, item_id: v.item_id, badge: 'both' });
   }
-  console.log('[OurPicks aggregateYesSwipes] aggregated result', out);
   return out;
 }
 

@@ -1,6 +1,34 @@
+import type { CategoryId } from '@/data/options';
+import { CATEGORY_ORDER } from '@/data/options';
 import type { CoupleStorage } from '@/lib/types';
 
 const KEY = 'vow-and-choose';
+const SWIPE_CATEGORY_KEY = 'vow-swipe-category';
+
+function isCategoryId(v: string): v is CategoryId {
+  return (CATEGORY_ORDER as readonly string[]).includes(v);
+}
+
+/** Last selected Swipe tab category — survives navigation to Our Picks / Settings. */
+export function loadSwipeCategory(): CategoryId | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(SWIPE_CATEGORY_KEY);
+    if (!raw || !isCategoryId(raw)) return null;
+    return raw;
+  } catch {
+    return null;
+  }
+}
+
+export function saveSwipeCategory(category: CategoryId): void {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(SWIPE_CATEGORY_KEY, category);
+  } catch {
+    /* ignore quota / private mode */
+  }
+}
 
 export function loadCouple(): CoupleStorage | null {
   if (typeof window === 'undefined') return null;
@@ -35,14 +63,6 @@ export function clearCouple() {
 /** True when this device already stored this couple as the creator — avoids overwriting with false after opening a share link or re-joining with the same code. */
 export function isExistingCoupleCreator(coupleId: string): boolean {
   const c = loadCouple();
-  const raw =
-    typeof window !== 'undefined' ? window.localStorage.getItem(KEY) : null;
-  console.log('[isExistingCoupleCreator]', {
-    coupleIdArg: coupleId,
-    rawLocalStorage: raw,
-    loadedCoupleId: c?.coupleId,
-    loadedIsCreator: c?.isCreator,
-  });
   return c?.coupleId === coupleId && c.isCreator === true;
 }
 

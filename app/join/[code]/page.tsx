@@ -32,7 +32,6 @@ export default function JoinPage({ params }: { params: { code: string } }) {
         locationState: data.location_state ?? undefined,
         locationCity: data.location_city ?? undefined,
       };
-      console.log('[join/[code]] saveCouplePartial', joinSavePatch);
       saveCouplePartial(joinSavePatch);
       setStatus('ok');
     }
