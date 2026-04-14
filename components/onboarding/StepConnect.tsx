@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
-import { saveCouplePartial } from '@/lib/storage';
+import { isExistingCoupleCreator, saveCouplePartial } from '@/lib/storage';
 import { createBrowserClient } from '@/lib/supabase';
 
 /** Disabled: greige; enabled: primary — inline bg avoids Safari ignoring Tailwind bg on <button> */
@@ -261,17 +261,20 @@ export function StepConnect({
         setError('Code not found — double check with your partner');
         return;
       }
-      saveCouplePartial({
+      const creatorOnDevice = isExistingCoupleCreator(data.id);
+      const joinSavePatch = {
         coupleId: data.id,
         coupleCode: data.code,
-        isCreator: false,
+        isCreator: creatorOnDevice,
         locationState: data.location_state ?? undefined,
         locationCity: data.location_city ?? undefined,
-      });
+      };
+      console.log('[StepConnect joinWithCode] saveCouplePartial', joinSavePatch);
+      saveCouplePartial(joinSavePatch);
       onCreatedOrJoined({
         coupleId: data.id,
         coupleCode: data.code,
-        isCreator: false,
+        isCreator: creatorOnDevice,
         locationState: data.location_state,
         locationCity: data.location_city,
       });

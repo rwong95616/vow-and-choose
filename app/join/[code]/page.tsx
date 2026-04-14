@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { OnboardingFlow } from '@/components/onboarding/OnboardingFlow';
-import { saveCouplePartial } from '@/lib/storage';
+import { isExistingCoupleCreator, saveCouplePartial } from '@/lib/storage';
 import { createBrowserClient } from '@/lib/supabase';
 
 export default function JoinPage({ params }: { params: { code: string } }) {
@@ -25,13 +25,15 @@ export default function JoinPage({ params }: { params: { code: string } }) {
         setStatus('error');
         return;
       }
-      saveCouplePartial({
+      const joinSavePatch = {
         coupleId: data.id,
         coupleCode: data.code,
-        isCreator: false,
+        isCreator: isExistingCoupleCreator(data.id),
         locationState: data.location_state ?? undefined,
         locationCity: data.location_city ?? undefined,
-      });
+      };
+      console.log('[join/[code]] saveCouplePartial', joinSavePatch);
+      saveCouplePartial(joinSavePatch);
       setStatus('ok');
     }
     void run();

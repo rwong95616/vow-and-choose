@@ -2,11 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { US_STATES } from '@/data/usStates';
 import {
   getFallbackVenuesAllStatesRandomized,
+  getFallbackVenuesAllStatesSeeded,
   getFallbackVenuesForLocation,
 } from '@/data/fallbackVenues';
 import type { WeddingOption } from '@/lib/types';
 import { VENUE_IMAGE_PLACEHOLDER } from '@/lib/venueImage';
 import { buildVenueLocationKey } from '@/lib/venueLocationKey';
+import { shuffleInPlaceSeeded } from '@/lib/seededShuffle';
 import { createServerClient } from '@/lib/supabase';
 
 const CACHE_DAYS = 7;
@@ -83,11 +85,21 @@ async function textSearchVenues(
 
 export async function GET(req: NextRequest) {
   const allStates = req.nextUrl.searchParams.get('allStates') === '1';
+  const coupleId = req.nextUrl.searchParams.get('coupleId')?.trim() ?? '';
   const state = req.nextUrl.searchParams.get('state')?.trim() ?? '';
   const city = req.nextUrl.searchParams.get('city')?.trim() || null;
   const apiKey = process.env.GOOGLE_PLACES_API_KEY?.trim() ?? '';
+  console.log('[api/venues]', {
+    coupleIdFromQuery: coupleId || '(empty)',
+    allStates,
+    allStatesShufflePath: allStates ? (coupleId ? 'seeded' : 'random') : 'n/a',
+  });
   const sampleVenues = () =>
-    allStates ? getFallbackVenuesAllStatesRandomized() : getFallbackVenuesForLocation(state, city);
+    allStates
+      ? coupleId
+        ? getFallbackVenuesAllStatesSeeded(coupleId)
+        : getFallbackVenuesAllStatesRandomized()
+      : getFallbackVenuesForLocation(state, city);
 
   if (!allStates && !state) {
     return NextResponse.json({ error: 'state is required' }, { status: 400 });
@@ -110,6 +122,7 @@ export async function GET(req: NextRequest) {
       ageMs < CACHE_DAYS * 24 * 60 * 60 * 1000 &&
       rows.length > 0
     ) {
+      console.log('[api/venues] response path: cache hit (no shuffle on this request)');
       return NextResponse.json({
         venues: rows,
         cached: true,
@@ -119,6 +132,10 @@ export async function GET(req: NextRequest) {
   }
 
   if (!isGooglePlacesConfigured()) {
+    console.log(
+      '[api/venues] response path: Places unavailable — fallback sample shuffle:',
+      allStates ? (coupleId ? 'seeded' : 'random') : 'location-based'
+    );
     return NextResponse.json({
       venues: sampleVenues(),
       cached: false,
@@ -130,8 +147,16 @@ export async function GET(req: NextRequest) {
 
   if (allStates) {
     try {
+      console.log(
+        '[api/venues] response path: allStates Google — label/merge shuffle:',
+        coupleId ? 'seeded' : 'random'
+      );
       const labels = US_STATES.map((s) => s.label);
-      shuffleInPlace(labels);
+      if (coupleId) {
+        shuffleInPlaceSeeded(labels, coupleId);
+      } else {
+        shuffleInPlace(labels);
+      }
       const pickStates = labels.slice(0, 4);
       const batches = await Promise.all(
         pickStates.map((label) => textSearchVenues(`wedding venues in ${label}`, apiKey))
@@ -146,7 +171,11 @@ export async function GET(req: NextRequest) {
           }
         }
       }
-      shuffleInPlace(merged);
+      if (coupleId) {
+        shuffleInPlaceSeeded(merged, `${coupleId}:merged`);
+      } else {
+        shuffleInPlace(merged);
+      }
       const places = merged.slice(0, 12);
 
       const detailsList = await Promise.all(
@@ -198,6 +227,10 @@ export async function GET(req: NextRequest) {
 
       return NextResponse.json({ venues, cached: false, fallback: false });
     } catch {
+      console.log(
+        '[api/venues] response path: allStates Places error — fallback sample shuffle:',
+        coupleId ? 'seeded' : 'random'
+      );
       return NextResponse.json({
         venues: sampleVenues(),
         cached: false,
@@ -263,6 +296,10 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ venues, cached: false, fallback: false });
   } catch {
+    console.log(
+      '[api/venues] response path: state/city Places error — fallback sample shuffle:',
+      allStates ? (coupleId ? 'seeded' : 'random') : 'location-based'
+    );
     return NextResponse.json({
       venues: sampleVenues(),
       cached: false,

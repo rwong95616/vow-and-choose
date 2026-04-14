@@ -12,6 +12,8 @@ export type SwipeRow = {
   item_id: string;
   decision: 'yes' | 'no';
   created_at?: string | null;
+  /** Creator swiper = true (Bride 1 / Groom 1); joiner = false (Bride 2 / Groom 2). */
+  is_creator?: boolean | null;
 };
 
 export function usePicks(coupleId: string | undefined) {
@@ -28,8 +30,16 @@ export function usePicks(coupleId: string | undefined) {
     setLoading(true);
     const { data, error } = await supabase
       .from('swipes')
-      .select('id, couple_id, user_role, swipe_user_id, category, item_id, decision, created_at')
-      .eq('couple_id', coupleId);
+      .select(
+        'id, couple_id, user_role, swipe_user_id, category, item_id, decision, created_at, is_creator'
+      )
+      .eq('couple_id', coupleId)
+      .eq('decision', 'yes');
+    console.log('[usePicks] Supabase swipes query full result', {
+      coupleId,
+      error,
+      rows: data ?? [],
+    });
     if (error) setSwipes([]);
     else setSwipes((data ?? []) as SwipeRow[]);
     setLoading(false);

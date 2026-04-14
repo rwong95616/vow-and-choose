@@ -32,6 +32,20 @@ export function clearCouple() {
   localStorage.removeItem(KEY);
 }
 
+/** True when this device already stored this couple as the creator — avoids overwriting with false after opening a share link or re-joining with the same code. */
+export function isExistingCoupleCreator(coupleId: string): boolean {
+  const c = loadCouple();
+  const raw =
+    typeof window !== 'undefined' ? window.localStorage.getItem(KEY) : null;
+  console.log('[isExistingCoupleCreator]', {
+    coupleIdArg: coupleId,
+    rawLocalStorage: raw,
+    loadedCoupleId: c?.coupleId,
+    loadedIsCreator: c?.isCreator,
+  });
+  return c?.coupleId === coupleId && c.isCreator === true;
+}
+
 export function isOnboardingComplete(): boolean {
   const c = loadCouple();
   if (!c?.coupleId || !c.coupleCode || !c.userRole) return false;

@@ -22,7 +22,7 @@ type AggregatedPick = {
   category: string;
   item_id: string;
   badge: 'both' | 'bride' | 'groom';
-  /** When the couple shares one role and only one partner liked the item (e.g. "Bride 1"). Mixed-role couples use default "Bride"/"Groom". */
+  /** When same-role pair is confirmed and only one partner liked the item (e.g. "Bride 1"); otherwise plain "Bride"/"Groom". */
   badgeTextOverride?: string;
 };
 
@@ -30,57 +30,54 @@ function likerKey(s: SwipeRow): string {
   return (s.swipe_user_id && s.swipe_user_id.trim()) || s.id;
 }
 
-function swipeTimeMs(createdAt: string | null | undefined): number {
-  if (createdAt == null || createdAt === '') return 0;
-  const t = Date.parse(createdAt);
-  return Number.isNaN(t) ? 0 : t;
-}
-
-/** Up to 2 partners per role (by latest `created_at` per `swipe_user_id`) for numbering 1 / 2 in same-role couples. */
+/** Bride 1 / Groom 1 = creator swipe_user_id (is_creator true); Bride 2 / Groom 2 = joiner (false). */
 function coupleRoleContext(swipes: SwipeRow[], coupleId: string | undefined) {
   const scoped =
     coupleId != null && coupleId !== ''
       ? swipes.filter((s) => s.couple_id === coupleId)
       : [];
 
-  const brideLast = new Map<string, number>();
-  const groomLast = new Map<string, number>();
+  const brideUids = new Set<string>();
+  const groomUids = new Set<string>();
+  const uidIsCreator = new Map<string, boolean | null>();
   for (const s of scoped) {
-    console.log('[coupleRoleContext] scoped row (swipe_user_id + role)', {
-      swipe_user_id: s.swipe_user_id,
-      user_role: s.user_role,
-    });
     const uid = s.swipe_user_id?.trim();
     if (!uid) continue;
-    const t = swipeTimeMs(s.created_at);
-    if (s.user_role === 'bride') {
-      brideLast.set(uid, Math.max(brideLast.get(uid) ?? 0, t));
-    } else {
-      groomLast.set(uid, Math.max(groomLast.get(uid) ?? 0, t));
-    }
+    if (s.user_role === 'bride') brideUids.add(uid);
+    else groomUids.add(uid);
+    if (s.is_creator != null) uidIsCreator.set(uid, s.is_creator);
+    else if (!uidIsCreator.has(uid)) uidIsCreator.set(uid, null);
   }
 
-  const top2ByLatestSwipe = (lastById: Map<string, number>): string[] =>
-    [...lastById.entries()]
-      .sort((a, b) => {
-        if (b[1] !== a[1]) return b[1] - a[1];
-        return a[0].localeCompare(b[0]);
-      })
-      .slice(0, 2)
-      .map(([id]) => id);
+  const orderRoleIds = (uids: Set<string>): string[] => {
+    const creator = [...uids].find((u) => uidIsCreator.get(u) === true);
+    const joiner = [...uids].find((u) => uidIsCreator.get(u) === false);
+    const out: string[] = [];
+    if (creator) out.push(creator);
+    if (joiner) out.push(joiner);
+    for (const u of [...uids].sort()) {
+      if (!out.includes(u) && out.length < 2) out.push(u);
+    }
+    return out.slice(0, 2);
+  };
 
-  const brideIds = top2ByLatestSwipe(brideLast);
-  const groomIds = top2ByLatestSwipe(groomLast);
-  console.log('[coupleRoleContext] brideLast map (uid -> latest ms)', Object.fromEntries(brideLast));
-  console.log('[coupleRoleContext] brideIds after top-2', brideIds);
+  const brideIds = orderRoleIds(brideUids);
+  const groomIds = orderRoleIds(groomUids);
+
   const mixed = brideIds.length > 0 && groomIds.length > 0;
 
-  return { mixed, brideIds, groomIds };
+  /** Both partners have swiped as brides (two distinct swipe ids) and nobody as groom — safe for Bride 1/2. */
+  const sameRoleTwoBrides = brideUids.size >= 2 && groomUids.size === 0;
+  /** Both partners have swiped as grooms and nobody as bride — safe for Groom 1/2. */
+  const sameRoleTwoGrooms = groomUids.size >= 2 && brideUids.size === 0;
+
+  return { mixed, brideIds, groomIds, sameRoleTwoBrides, sameRoleTwoGrooms };
 }
 
 type LikerInfo = { role: 'bride' | 'groom'; swipeUserId: string | null };
 
 function aggregateYesSwipes(swipes: SwipeRow[], ctx: ReturnType<typeof coupleRoleContext>): AggregatedPick[] {
+  console.log('[OurPicks aggregateYesSwipes] input swipes', swipes);
   const yes = swipes.filter((s) => s.decision === 'yes');
   const byKey = new Map<
     string,
@@ -115,14 +112,12 @@ function aggregateYesSwipes(swipes: SwipeRow[], ctx: ReturnType<typeof coupleRol
         item_id: v.item_id,
         badge: role === 'bride' ? 'bride' : 'groom',
       };
-      if (!ctx.mixed) {
-        if (role === 'bride' && ctx.brideIds.length > 0) {
-          const pos = swipeUserId != null ? ctx.brideIds.indexOf(swipeUserId) : -1;
-          if (pos >= 0) base.badgeTextOverride = `Bride ${pos + 1}`;
-        } else if (role === 'groom' && ctx.groomIds.length > 0) {
-          const pos = swipeUserId != null ? ctx.groomIds.indexOf(swipeUserId) : -1;
-          if (pos >= 0) base.badgeTextOverride = `Groom ${pos + 1}`;
-        }
+      if (ctx.sameRoleTwoBrides && role === 'bride' && ctx.brideIds.length > 0) {
+        const pos = swipeUserId != null ? ctx.brideIds.indexOf(swipeUserId) : -1;
+        if (pos >= 0) base.badgeTextOverride = `Bride ${pos + 1}`;
+      } else if (ctx.sameRoleTwoGrooms && role === 'groom' && ctx.groomIds.length > 0) {
+        const pos = swipeUserId != null ? ctx.groomIds.indexOf(swipeUserId) : -1;
+        if (pos >= 0) base.badgeTextOverride = `Groom ${pos + 1}`;
       }
       out.push(base);
       continue;
@@ -140,6 +135,7 @@ function aggregateYesSwipes(swipes: SwipeRow[], ctx: ReturnType<typeof coupleRol
     // Two+ likers, same role → mutual "Our Pick"
     out.push({ category: v.category, item_id: v.item_id, badge: 'both' });
   }
+  console.log('[OurPicks aggregateYesSwipes] aggregated result', out);
   return out;
 }
 
@@ -210,9 +206,11 @@ export function OurPicksSections() {
   const { swipes, loading: picksLoading } = usePicks(coupleId);
   const skipLocationCatalog =
     !!couple?.locationSkipped && !couple?.locationState?.trim();
+  const skipVenueStateFilter = !couple?.locationState?.trim();
   const { venues, loading: venuesLoading } = useVenues(couple?.locationState, couple?.locationCity, {
     enabled: ready,
-    skipStateFilter: skipLocationCatalog,
+    skipStateFilter: skipVenueStateFilter,
+    coupleId,
   });
 
   const [cacheVenues, setCacheVenues] = useState<WeddingOption[]>([]);

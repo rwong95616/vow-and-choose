@@ -45,3 +45,20 @@ export function getOrCreateSwipeUserId(
     return '';
   }
 }
+
+/** Read persisted creator/joiner swipe user ids (same keys as `getOrCreateSwipeUserId`). Client-only. */
+export function getScopedSwipeUserIdsFromStorage(coupleId: string): {
+  creator: string | null;
+  joiner: string | null;
+} {
+  if (typeof window === 'undefined' || !coupleId.trim()) {
+    return { creator: null, joiner: null };
+  }
+  try {
+    const c = localStorage.getItem(`vow-swipe-uid:${coupleId}:c`)?.trim() ?? null;
+    const j = localStorage.getItem(`vow-swipe-uid:${coupleId}:j`)?.trim() ?? null;
+    return { creator: c || null, joiner: j || null };
+  } catch {
+    return { creator: null, joiner: null };
+  }
+}

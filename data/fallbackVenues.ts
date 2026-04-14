@@ -1,4 +1,5 @@
 import type { WeddingOption } from '@/lib/types';
+import { shuffleInPlaceSeeded } from '@/lib/seededShuffle';
 
 /** Legacy mix (2 per US region) — used when no state-specific pack applies */
 export const fallbackVenues: WeddingOption[] = [
@@ -351,6 +352,13 @@ function shuffleVenues<T>(items: T[]): T[] {
 /** Shuffled national sample pack (multi-region) — when no state filter applies (e.g. skipped location). */
 export function getFallbackVenuesAllStatesRandomized(): WeddingOption[] {
   return shuffleVenues(fallbackVenues);
+}
+
+/** Same pool as {@link getFallbackVenuesAllStatesRandomized} but order is stable for a given `coupleId`. */
+export function getFallbackVenuesAllStatesSeeded(coupleId: string): WeddingOption[] {
+  const arr = [...fallbackVenues];
+  shuffleInPlaceSeeded(arr, coupleId);
+  return arr;
 }
 
 /**

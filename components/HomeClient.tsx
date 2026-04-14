@@ -43,12 +43,16 @@ export function HomeClient() {
       .select('location_state, location_city')
       .eq('id', couple.coupleId)
       .maybeSingle()
-      .then(({ data }) => {
+      .then((res) => {
+        console.log('[HomeClient] Supabase couples select (location sync) full response', res);
+        const { data } = res;
         if (data?.location_state) {
-          saveCouplePartial({
+          const patch = {
             locationState: data.location_state,
             locationCity: data.location_city ?? undefined,
-          });
+          };
+          console.log('[HomeClient] saveCouplePartial (location sync)', patch);
+          saveCouplePartial(patch);
           refresh();
         }
       });
@@ -56,15 +60,16 @@ export function HomeClient() {
 
   const state = couple?.locationState;
   const city = couple?.locationCity;
-  const skipVenueStateFilter =
-    !!couple?.locationSkipped && !couple?.locationState?.trim();
+  const skipVenueStateFilter = !couple?.locationState?.trim();
 
   const { venues, loading: venuesLoading } = useVenues(state, city, {
     enabled: ready,
     skipStateFilter: skipVenueStateFilter,
+    coupleId: couple?.coupleId,
   });
 
   const userRole = couple?.userRole ?? 'bride';
+  console.log('[HomeClient] couple?.isCreator passed to useSwipes:', couple?.isCreator);
   const { decisions, persistSwipe, applyLocalSwipe, resetCategory } = useSwipes(
     couple?.coupleId,
     userRole,

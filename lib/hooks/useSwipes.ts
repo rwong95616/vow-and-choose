@@ -52,6 +52,7 @@ export function useSwipes(
     async (itemId: string, decision: Decision) => {
       const swipeUserId = getOrCreateSwipeUserId(coupleId, isCreator);
       if (!coupleId || !userRole || !swipeUserId) return;
+      console.log('[useSwipes] persistSwipe isCreator:', isCreator);
       const { error } = await supabase.from('swipes').upsert(
         {
           couple_id: coupleId,
@@ -60,6 +61,7 @@ export function useSwipes(
           category,
           item_id: itemId,
           decision,
+          is_creator: isCreator === true,
         },
         { onConflict: 'couple_id,swipe_user_id,category,item_id' }
       );

@@ -30,12 +30,16 @@ function PicksPageInner() {
       .select('location_state, location_city')
       .eq('id', couple.coupleId)
       .maybeSingle()
-      .then(({ data }) => {
+      .then((res) => {
+        console.log('[picks/page] Supabase couples select (location sync) full response', res);
+        const { data } = res;
         if (data?.location_state) {
-          saveCouplePartial({
+          const patch = {
             locationState: data.location_state,
             locationCity: data.location_city ?? undefined,
-          });
+          };
+          console.log('[picks/page] saveCouplePartial (location sync)', patch);
+          saveCouplePartial(patch);
           refresh();
         }
       });
