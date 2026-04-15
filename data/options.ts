@@ -228,14 +228,14 @@ export const entertainmentOptions: WeddingOption[] = [
     category: 'entertainment',
     title: 'Photo Booth',
     description: 'Instant memories for guests.',
-    imageUrl: 'https://images.unsplash.com/photo-1762709117928-b3662d515832?w=800&q=80',
+    imageUrl: 'https://images.unsplash.com/photo-1623344106769-2c464a579b15?w=800&q=80',
   },
   {
     id: 'ent-6',
     category: 'entertainment',
     title: 'Sparkler Exit',
     description: 'Send-off sparkle and warmth.',
-    imageUrl: 'https://images.unsplash.com/photo-1712948220370-af14af9ae5fb?w=800&q=80',
+    imageUrl: 'https://images.unsplash.com/photo-1629219219925-ea8de62f2d68?w=800&q=80',
   },
   {
     id: 'ent-7',
@@ -256,14 +256,14 @@ export const entertainmentOptions: WeddingOption[] = [
     category: 'entertainment',
     title: 'Magician',
     description: 'Wonder between courses.',
-    imageUrl: 'https://images.unsplash.com/photo-1698966165570-2c1d256c596c?w=800&q=80',
+    imageUrl: 'https://images.unsplash.com/photo-1622466565619-abbf557817a9?w=800&q=80',
   },
   {
     id: 'ent-10',
     category: 'entertainment',
     title: 'Caricature Artist',
     description: 'Keepsake sketches for guests.',
-    imageUrl: 'https://images.unsplash.com/photo-1760740921490-017e5ce652e7?w=800&q=80',
+    imageUrl: 'https://images.unsplash.com/photo-1695024253084-9adea9373bb3?w=800&q=80',
   },
 ];
 
