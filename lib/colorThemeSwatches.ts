@@ -8,9 +8,9 @@ export const COLOR_THEME_SWATCHES: Record<string, readonly [string, string]> = {
   'ct-6': ['#046A38', '#F5F5F5'],
   'ct-7': ['#E8B4B8', '#E8D4B8'],
   'ct-8': ['#1A1A1A', '#F5F5F5'],
-  'ct-9': ['#FFCBA4', '#E87A6B'],
+  'ct-9': ['#A8C5D8', '#E8C84A'],
   'ct-10': ['#722F37', '#D4AF37'],
-  'ct-11': ['#98D8C8', '#D4AF37'],
+  'ct-11': ['#E5B8C8', '#8FA8C4'],
   'ct-12': ['#7B9EAE', '#F5F5F5'],
 };
 
