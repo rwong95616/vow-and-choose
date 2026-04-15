@@ -54,14 +54,14 @@ export const colorThemeOptions: WeddingOption[] = [
     category: 'color-theme',
     title: 'Terracotta & Rust',
     description: 'Warm desert sunset tones.',
-    imageUrl: 'https://images.unsplash.com/photo-1771570992394-b1e80d246340?w=800&q=80',
+    imageUrl: 'https://images.unsplash.com/photo-1637534371564-458a3a29972f?w=800&q=80',
   },
   {
     id: 'ct-6',
     category: 'color-theme',
     title: 'Emerald & White',
     description: 'Jewel green with crisp white contrast.',
-    imageUrl: 'https://images.unsplash.com/photo-1765229280659-d35a2467b976?w=800&q=80',
+    imageUrl: 'https://images.unsplash.com/photo-1769812343267-9fa62f903faa?w=800&q=80',
   },
   {
     id: 'ct-7',
